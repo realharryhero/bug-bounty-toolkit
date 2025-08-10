@@ -16,6 +16,11 @@ from scanners.sqli.sql_injection_scanner import SQLInjectionScanner
 from scanners.xss.xss_scanner import XSSScanner
 from scanners.csrf.csrf_scanner import CSRFScanner
 from scanners.traversal.directory_traversal_scanner import DirectoryTraversalScanner
+from scanners.auth.auth_bypass_scanner import AuthBypassScanner
+from scanners.ssrf.ssrf_scanner import SSRFScanner
+from scanners.xxe.xxe_scanner import XXEScanner
+from scanners.cmdi.command_injection_scanner import CommandInjectionScanner
+from scanners.idor.idor_scanner import IDORScanner
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
@@ -41,7 +46,11 @@ class ScannerController:
             'xss': XSSScanner(config_manager),
             'csrf': CSRFScanner(config_manager),
             'traversal': DirectoryTraversalScanner(config_manager),
-            # Additional scanners would be initialized here
+            'auth': AuthBypassScanner(config_manager),
+            'ssrf': SSRFScanner(config_manager),
+            'xxe': XXEScanner(config_manager),
+            'cmdi': CommandInjectionScanner(config_manager),
+            'idor': IDORScanner(config_manager),
         }
     
     def run_scan(self, scan_type: str) -> ScanResults:
