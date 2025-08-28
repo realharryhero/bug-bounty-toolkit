@@ -80,6 +80,12 @@ scanners:
     time_delay: 5
     confidence_threshold: 0.7
 
+  ldap:
+    enabled: true
+    payload_file: "payloads/ldap_payloads.txt"
+    test_types: ["error", "blind"]
+    confidence_threshold: 0.7
+
 # Reconnaissance configurations
 recon:
   subdomain_enum:

@@ -21,6 +21,7 @@ from scanners.ssrf.ssrf_scanner import SSRFScanner
 from scanners.xxe.xxe_scanner import XXEScanner
 from scanners.cmdi.command_injection_scanner import CommandInjectionScanner
 from scanners.idor.idor_scanner import IDORScanner
+from scanners.ldap.ldap_injection_scanner import LDAPInjectionScanner
 from scanners.xpath.xpath_injection_scanner import XPathInjectionScanner
 from scanners.trace.trace_scanner import TraceScanner
 from scanners.ssji.ssji_scanner import SSJIScanner
@@ -54,6 +55,7 @@ class ScannerController:
             'xxe': XXEScanner(config_manager),
             'cmdi': CommandInjectionScanner(config_manager),
             'idor': IDORScanner(config_manager),
+            'ldap': LDAPInjectionScanner(config_manager),
             'ssji': SSJIScanner(config_manager),
             'xpath': XPathInjectionScanner(config_manager),
             'trace': TraceScanner(config_manager),

@@ -185,6 +185,69 @@ def test_scanners():
         print(f"❌ Scanner error: {e}")
         return False
 
+def test_ldap_scanner():
+    """Test the LDAP injection scanner."""
+    print("Testing LDAP Injection Scanner...")
+    try:
+        from core.config.config_manager import ConfigManager
+        from scanners.ldap.ldap_injection_scanner import LDAPInjectionScanner
+
+        config_manager = ConfigManager("config/default.yml")
+        ldap_scanner = LDAPInjectionScanner(config_manager)
+
+        test_url = "http://test.com/login?id=123&user=test"
+
+        with patch('requests.get') as mock_get:
+            # --- Test Error-Based LDAPi ---
+            mock_response_error = Mock()
+            mock_response_error.status_code = 200
+            mock_response_error.text = "An LDAPException occurred"
+
+            mock_response_normal = Mock()
+            mock_response_normal.status_code = 200
+            mock_response_normal.text = "Normal response"
+
+            num_payloads = len(ldap_scanner.payloads)
+            side_effects = [mock_response_normal] * num_payloads + [mock_response_error]
+            mock_get.side_effect = side_effects
+
+            # Temporarily disable blind scan to isolate error-based test
+            ldap_scanner.config['test_types'] = ['error']
+            findings = ldap_scanner.scan(test_url)
+
+            assert len(findings) == 1
+            assert "in parameter 'user'" in findings[0].title
+            print("✅ LDAP error-based scan successful")
+
+            # --- Test Blind LDAPi ---
+            mock_get.reset_mock()
+
+            mock_response_true = Mock()
+            mock_response_true.status_code = 200
+            mock_response_true.text = "Welcome admin"
+
+            mock_response_false = Mock()
+            mock_response_false.status_code = 200
+            mock_response_false.text = "Invalid credentials"
+
+            # For the 'id' param, both true and false payloads should result in the same "normal" response
+            # For the 'user' param, true payload gets "Welcome", false gets "Invalid"
+            side_effects = [mock_response_normal, mock_response_normal] + [mock_response_true, mock_response_false]
+            mock_get.side_effect = side_effects
+
+            # Temporarily disable error-based scan to isolate blind test
+            ldap_scanner.config['test_types'] = ['blind']
+            findings = ldap_scanner.scan(test_url)
+
+            assert len(findings) == 1
+            assert "in parameter 'user'" in findings[0].title
+            print("✅ LDAP blind injection scan successful")
+
+        return True
+    except Exception as e:
+        print(f"❌ LDAP Scanner test error: {e}")
+        import traceback
+        traceback.print_exc()
 
 def test_xpath_scanner():
     """Test the XPath injection scanner."""
@@ -253,6 +316,7 @@ def main():
         test_authorization,
         test_reporting,
         test_scanners,
+        test_ldap_scanner
         test_xpath_scanner
         test_cmdi_scanner
     ]
