@@ -58,6 +58,11 @@ scanners:
     payload_file: "payloads/cmdi_payloads.txt"
     test_types: ["direct", "blind", "time"]
   
+  php_code_injection:
+    enabled: true
+    payload_file: "payloads/php_code_injection_payloads.txt"
+    test_types: ["direct", "blind", "time"]
+
   idor:
     enabled: true
     test_numeric_ids: true
