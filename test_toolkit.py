@@ -26,6 +26,7 @@ def test_imports():
         from scanners.xss.xss_scanner import XSSScanner
         from scanners.csrf.csrf_scanner import CSRFScanner
         from scanners.traversal.directory_traversal_scanner import DirectoryTraversalScanner
+        from scanners.put.put_scanner import PutScanner
         print("✅ All imports successful")
         return True
     except ImportError as e:
@@ -135,6 +136,7 @@ def test_scanners():
         from scanners.xss.xss_scanner import XSSScanner
         from scanners.csrf.csrf_scanner import CSRFScanner
         from scanners.traversal.directory_traversal_scanner import DirectoryTraversalScanner
+        from scanners.put.put_scanner import PutScanner
         
         config_manager = ConfigManager("config/default.yml")
         
@@ -143,6 +145,7 @@ def test_scanners():
         xss_scanner = XSSScanner(config_manager)
         csrf_scanner = CSRFScanner(config_manager)
         traversal_scanner = DirectoryTraversalScanner(config_manager)
+        put_scanner = PutScanner(config_manager)
         
         # Check if payloads are loaded
         if (hasattr(sqli_scanner, 'payloads') and len(sqli_scanner.payloads) > 0 and
