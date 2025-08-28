@@ -21,6 +21,7 @@ from scanners.ssrf.ssrf_scanner import SSRFScanner
 from scanners.xxe.xxe_scanner import XXEScanner
 from scanners.cmdi.command_injection_scanner import CommandInjectionScanner
 from scanners.idor.idor_scanner import IDORScanner
+from scanners.php_code_injection.php_code_injection_scanner import PHPCodeInjectionScanner
 from scanners.bac.bac_scanner import BrokenAccessControlScanner
 from scanners.ldap.ldap_injection_scanner import LDAPInjectionScanner
 from scanners.xpath.xpath_injection_scanner import XPathInjectionScanner
@@ -56,6 +57,7 @@ class ScannerController:
             'xxe': XXEScanner(config_manager),
             'cmdi': CommandInjectionScanner(config_manager),
             'idor': IDORScanner(config_manager),
+            'php_code_injection': PHPCodeInjectionScanner(config_manager),
             'bac': BrokenAccessControlScanner(config_manager),
             'ldap': LDAPInjectionScanner(config_manager),
             'ssji': SSJIScanner(config_manager),
