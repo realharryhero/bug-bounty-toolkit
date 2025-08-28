@@ -64,6 +64,9 @@ scanners:
     test_uuid_ids: true
     test_encoded_ids: true
 
+  trace:
+    enabled: true
+
 # Reconnaissance configurations
 recon:
   subdomain_enum:
