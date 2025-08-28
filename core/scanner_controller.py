@@ -21,6 +21,7 @@ from scanners.ssrf.ssrf_scanner import SSRFScanner
 from scanners.xxe.xxe_scanner import XXEScanner
 from scanners.cmdi.command_injection_scanner import CommandInjectionScanner
 from scanners.idor.idor_scanner import IDORScanner
+from scanners.ssji.ssji_scanner import SSJIScanner
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
@@ -51,6 +52,7 @@ class ScannerController:
             'xxe': XXEScanner(config_manager),
             'cmdi': CommandInjectionScanner(config_manager),
             'idor': IDORScanner(config_manager),
+            'ssji': SSJIScanner(config_manager),
         }
     
     def run_scan(self, scan_type: str) -> ScanResults:

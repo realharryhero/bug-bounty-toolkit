@@ -64,6 +64,13 @@ scanners:
     test_uuid_ids: true
     test_encoded_ids: true
 
+  ssji:
+    enabled: true
+    payload_file: "payloads/ssji_payloads.txt"
+    test_types: ["direct", "blind", "error"]
+    time_delay: 5
+    confidence_threshold: 0.7
+
 # Reconnaissance configurations
 recon:
   subdomain_enum:
