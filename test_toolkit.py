@@ -188,8 +188,8 @@ def test_scanners():
         # Check if payloads are loaded
         if (hasattr(sqli_scanner, 'payloads') and len(sqli_scanner.payloads) > 0 and
             hasattr(xss_scanner, 'payloads') and len(xss_scanner.payloads) > 0 and
-            hasattr(php_code_injection_scanner, 'payloads') and len(php_code_injection_scanner.payloads) > 0):
-            hasattr(ssji_scanner, 'ssji_payloads') and len(ssji_scanner.ssji_payloads) > 0) and
+            hasattr(php_code_injection_scanner, 'payloads') and len(php_code_injection_scanner.payloads) > 0 and
+            hasattr(ssji_scanner, 'ssji_payloads') and len(ssji_scanner.ssji_payloads) > 0 and
             hasattr(cmdi_scanner, 'payloads') and len(cmdi_scanner.payloads) > 0):
             print("✅ Scanners initialized with payloads")
             return True
@@ -382,10 +382,10 @@ def main():
         test_authorization,
         test_reporting,
         test_scanners,
-        test_rci_scanner
-        test_oob_interaction
-        test_ldap_scanner
-        test_xpath_scanner
+        test_rci_scanner,
+        test_oob_interaction,
+        test_ldap_scanner,
+        test_xpath_scanner,
         test_cmdi_scanner
     ]
     
