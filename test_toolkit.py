@@ -25,6 +25,7 @@ from scanners.csrf.csrf_scanner import CSRFScanner
 from scanners.traversal.directory_traversal_scanner import DirectoryTraversalScanner
 from scanners.xpath.xpath_injection_scanner import XPathInjectionScanner
 from scanners.cmdi.command_injection_scanner import CommandInjectionScanner
+from scanners.put.put_scanner import PutScanner
 
 def test_imports():
     """Test that all core modules can be imported."""
@@ -40,6 +41,7 @@ def test_imports():
         assert 'DirectoryTraversalScanner' in globals()
         assert 'XPathInjectionScanner' in globals()
         assert 'CommandInjectionScanner' in globals()
+        assert 'PutScanner' in globals()
         print("✅ All imports successful")
         return True
     except (ImportError, AssertionError) as e:
@@ -139,6 +141,12 @@ def test_scanners():
     print("Testing scanners...")
     
     try:
+        from core.config.config_manager import ConfigManager
+        from scanners.sqli.sql_injection_scanner import SQLInjectionScanner
+        from scanners.xss.xss_scanner import XSSScanner
+        from scanners.csrf.csrf_scanner import CSRFScanner
+        from scanners.traversal.directory_traversal_scanner import DirectoryTraversalScanner
+        from scanners.put.put_scanner import PutScanner
         config_manager = ConfigManager("config/default.yml")
         
         # Initialize scanners
@@ -146,7 +154,9 @@ def test_scanners():
         xss_scanner = XSSScanner(config_manager)
         csrf_scanner = CSRFScanner(config_manager)
         traversal_scanner = DirectoryTraversalScanner(config_manager)
+        put_scanner = PutScanner(config_manager)
         cmdi_scanner = CommandInjectionScanner(config_manager)
+
         
         # Check if payloads are loaded
         if (hasattr(sqli_scanner, 'payloads') and len(sqli_scanner.payloads) > 0 and

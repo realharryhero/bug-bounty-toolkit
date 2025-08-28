@@ -26,6 +26,7 @@ By using this software, you acknowledge and agree that:
 - **XXE**: XML External Entity vulnerability testing
 - **Command Injection**: OS command injection detection
 - **IDOR**: Insecure Direct Object Reference testing
+- **HTTP PUT Method Detection**: Checks if the PUT method is enabled on the server.
 
 ### 🕵️ Reconnaissance Automation
 - **Subdomain Enumeration**: DNS brute-forcing and passive discovery
@@ -160,6 +161,7 @@ bug-bounty-toolkit/
 │   ├── sqli/              # SQL injection scanner
 │   ├── xss/               # XSS scanner
 │   ├── csrf/              # CSRF scanner
+│   ├── put/               # HTTP PUT method scanner
 │   └── ...                # Additional scanners
 ├── recon/                 # Reconnaissance modules
 ├── payloads/              # Attack payloads and wordlists
@@ -182,6 +184,7 @@ bug-bounty-toolkit/
 | XXE | XML external entity vulnerabilities | 🚧 In Progress |
 | Command Injection | OS command injection detection | 🚧 In Progress |
 | IDOR | Insecure direct object references | 🚧 In Progress |
+| HTTP PUT Enabled | Detects if the HTTP PUT method is enabled (CWE-650) | ✅ Implemented |
 
 ## Reconnaissance Modules
 
