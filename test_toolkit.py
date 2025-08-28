@@ -26,6 +26,7 @@ def test_imports():
         from scanners.xss.xss_scanner import XSSScanner
         from scanners.csrf.csrf_scanner import CSRFScanner
         from scanners.traversal.directory_traversal_scanner import DirectoryTraversalScanner
+        from scanners.cmdi.command_injection_scanner import CommandInjectionScanner
         print("✅ All imports successful")
         return True
     except ImportError as e:
@@ -135,6 +136,7 @@ def test_scanners():
         from scanners.xss.xss_scanner import XSSScanner
         from scanners.csrf.csrf_scanner import CSRFScanner
         from scanners.traversal.directory_traversal_scanner import DirectoryTraversalScanner
+        from scanners.cmdi.command_injection_scanner import CommandInjectionScanner
         
         config_manager = ConfigManager("config/default.yml")
         
@@ -143,10 +145,12 @@ def test_scanners():
         xss_scanner = XSSScanner(config_manager)
         csrf_scanner = CSRFScanner(config_manager)
         traversal_scanner = DirectoryTraversalScanner(config_manager)
+        cmdi_scanner = CommandInjectionScanner(config_manager)
         
         # Check if payloads are loaded
         if (hasattr(sqli_scanner, 'payloads') and len(sqli_scanner.payloads) > 0 and
-            hasattr(xss_scanner, 'payloads') and len(xss_scanner.payloads) > 0):
+            hasattr(xss_scanner, 'payloads') and len(xss_scanner.payloads) > 0 and
+            hasattr(cmdi_scanner, 'payloads') and len(cmdi_scanner.payloads) > 0):
             print("✅ Scanners initialized with payloads")
             return True
         else:
@@ -155,6 +159,28 @@ def test_scanners():
             
     except Exception as e:
         print(f"❌ Scanner error: {e}")
+        return False
+
+def test_cmdi_scanner():
+    """Test CMDi scanner initialization."""
+    print("Testing CMDi Scanner...")
+
+    try:
+        from core.config.config_manager import ConfigManager
+        from scanners.cmdi.command_injection_scanner import CommandInjectionScanner
+
+        config_manager = ConfigManager("config/default.yml")
+        cmdi_scanner = CommandInjectionScanner(config_manager)
+
+        if hasattr(cmdi_scanner, 'payloads') and len(cmdi_scanner.payloads) > 0:
+            print("✅ CMDi scanner initialized with payloads")
+            return True
+        else:
+            print("❌ CMDi scanner not properly initialized")
+            return False
+
+    except Exception as e:
+        print(f"❌ CMDi scanner error: {e}")
         return False
 
 def main():
@@ -168,7 +194,8 @@ def main():
         test_configuration,
         test_authorization,
         test_reporting,
-        test_scanners
+        test_scanners,
+        test_cmdi_scanner
     ]
     
     passed = 0
