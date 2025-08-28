@@ -21,6 +21,8 @@ from scanners.ssrf.ssrf_scanner import SSRFScanner
 from scanners.xxe.xxe_scanner import XXEScanner
 from scanners.cmdi.command_injection_scanner import CommandInjectionScanner
 from scanners.idor.idor_scanner import IDORScanner
+from scanners.xpath.xpath_injection_scanner import XPathInjectionScanner
+from scanners.trace.trace_scanner import TraceScanner
 from scanners.ssji.ssji_scanner import SSJIScanner
 
 logger = logging.getLogger(__name__)
@@ -53,6 +55,8 @@ class ScannerController:
             'cmdi': CommandInjectionScanner(config_manager),
             'idor': IDORScanner(config_manager),
             'ssji': SSJIScanner(config_manager),
+            'xpath': XPathInjectionScanner(config_manager),
+            'trace': TraceScanner(config_manager),
         }
     
     def run_scan(self, scan_type: str) -> ScanResults:
