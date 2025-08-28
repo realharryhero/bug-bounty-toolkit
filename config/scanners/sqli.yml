@@ -1,0 +1,8 @@
+# SQL Injection Scanner Configuration
+enabled: true
+payload_file: "payloads/sqli_payloads.txt"
+test_types: ["error", "blind", "time", "union"]
+time_delay: 5
+confidence_threshold: 0.7
+max_payloads_per_param: 10
+timeout: 30

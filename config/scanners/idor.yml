@@ -1,0 +1,7 @@
+# IDOR Scanner Configuration
+enabled: true
+test_numeric_ids: true
+test_uuid_ids: true
+test_encoded_ids: true
+max_payloads_per_param: 10
+timeout: 30

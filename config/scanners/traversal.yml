@@ -1,0 +1,6 @@
+# Directory Traversal Scanner Configuration
+enabled: true
+payload_file: "payloads/traversal_payloads.txt"
+encodings: ["url", "double_url", "unicode"]
+max_payloads_per_param: 10
+timeout: 30

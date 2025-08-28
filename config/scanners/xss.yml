@@ -1,0 +1,7 @@
+# XSS Scanner Configuration
+enabled: true
+payload_file: "payloads/xss_payloads.txt"
+test_types: ["reflected", "stored", "dom"]
+confidence_threshold: 0.8
+max_payloads_per_param: 10
+timeout: 30

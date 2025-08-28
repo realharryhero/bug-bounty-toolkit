@@ -12,11 +12,13 @@ from core.config.config_manager import ConfigManager
 from core.reporting.report_generator import Finding, Severity
 from core.utils.logger import get_security_logger
 from core.utils.oob_interaction import OOBInteraction
+from scanners.base_scanner import BaseScanner, register_scanner
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
 
-class SSRFScanner:
+@register_scanner('ssrf')
+class SSRFScanner(BaseScanner):
     """Server-Side Request Forgery vulnerability scanner."""
     
     def __init__(self, config_manager: ConfigManager):
@@ -26,8 +28,7 @@ class SSRFScanner:
         Args:
             config_manager: Configuration manager instance
         """
-        self.config = config_manager.get_scanner_config('ssrf')
-        self.general_config = config_manager.get('general')
+        super().__init__(config_manager)
         self.oob_interaction: Optional[OOBInteraction] = None
         
         if self.config.get('test_out_of_band'):

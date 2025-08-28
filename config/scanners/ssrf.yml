@@ -1,0 +1,9 @@
+# SSRF Scanner Configuration
+enabled: true
+payload_file: "payloads/ssrf_payloads.txt"
+test_internal_ips: true
+test_cloud_metadata: true
+test_out_of_band: true
+oob_domain: "your-oob-domain.com"  # Replace with your OOB domain (e.g., interact.sh)
+max_payloads_per_param: 10
+timeout: 30

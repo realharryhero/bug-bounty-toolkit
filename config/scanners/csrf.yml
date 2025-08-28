@@ -1,0 +1,7 @@
+# CSRF Scanner Configuration
+enabled: true
+check_tokens: true
+check_referrer: true
+check_origin: true
+max_payloads_per_param: 5
+timeout: 30
