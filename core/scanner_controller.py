@@ -22,6 +22,11 @@ from scanners.xxe.xxe_scanner import XXEScanner
 from scanners.cmdi.command_injection_scanner import CommandInjectionScanner
 from scanners.idor.idor_scanner import IDORScanner
 from scanners.php_code_injection.php_code_injection_scanner import PHPCodeInjectionScanner
+from scanners.bac.bac_scanner import BrokenAccessControlScanner
+from scanners.ldap.ldap_injection_scanner import LDAPInjectionScanner
+from scanners.xpath.xpath_injection_scanner import XPathInjectionScanner
+from scanners.trace.trace_scanner import TraceScanner
+from scanners.ssji.ssji_scanner import SSJIScanner
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
@@ -53,6 +58,11 @@ class ScannerController:
             'cmdi': CommandInjectionScanner(config_manager),
             'idor': IDORScanner(config_manager),
             'php_code_injection': PHPCodeInjectionScanner(config_manager),
+            'bac': BrokenAccessControlScanner(config_manager),
+            'ldap': LDAPInjectionScanner(config_manager),
+            'ssji': SSJIScanner(config_manager),
+            'xpath': XPathInjectionScanner(config_manager),
+            'trace': TraceScanner(config_manager),
         }
     
     def run_scan(self, scan_type: str) -> ScanResults:
