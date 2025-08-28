@@ -73,6 +73,13 @@ scanners:
     test_types: ["error", "blind"]
     confidence_threshold: 0.7
 
+  ssji:
+    enabled: true
+    payload_file: "payloads/ssji_payloads.txt"
+    test_types: ["direct", "blind", "error"]
+    time_delay: 5
+    confidence_threshold: 0.7
+
 # Reconnaissance configurations
 recon:
   subdomain_enum:

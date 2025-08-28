@@ -32,6 +32,16 @@ def test_imports():
     print("Testing imports...")
     
     try:
+        from core.authorization.auth_manager import AuthorizationManager
+        from core.config.config_manager import ConfigManager
+        from core.reporting.report_generator import ReportGenerator, Finding, Severity
+        from core.utils.logger import setup_logging
+        from scanners.sqli.sql_injection_scanner import SQLInjectionScanner
+        from scanners.xss.xss_scanner import XSSScanner
+        from scanners.csrf.csrf_scanner import CSRFScanner
+        from scanners.traversal.directory_traversal_scanner import DirectoryTraversalScanner
+        from scanners.ssji.ssji_scanner import SSJIScanner
+        from scanners.put.put_scanner import PutScanner
         assert 'AuthorizationManager' in globals()
         assert 'ConfigManager' in globals()
         assert 'ReportGenerator' in globals()
@@ -42,6 +52,7 @@ def test_imports():
         assert 'XPathInjectionScanner' in globals()
         assert 'CommandInjectionScanner' in globals()
         assert 'PutScanner' in globals()
+        assert 'SSJIScanner' in globals()
         print("✅ All imports successful")
         return True
     except (ImportError, AssertionError) as e:
@@ -146,6 +157,7 @@ def test_scanners():
         from scanners.xss.xss_scanner import XSSScanner
         from scanners.csrf.csrf_scanner import CSRFScanner
         from scanners.traversal.directory_traversal_scanner import DirectoryTraversalScanner
+        from scanners.ssji.ssji_scanner import SSJIScanner    
         from scanners.put.put_scanner import PutScanner
         config_manager = ConfigManager("config/default.yml")
         
@@ -154,13 +166,14 @@ def test_scanners():
         xss_scanner = XSSScanner(config_manager)
         csrf_scanner = CSRFScanner(config_manager)
         traversal_scanner = DirectoryTraversalScanner(config_manager)
+        ssji_scanner = SSJIScanner(config_manager)
         put_scanner = PutScanner(config_manager)
         cmdi_scanner = CommandInjectionScanner(config_manager)
-
         
         # Check if payloads are loaded
         if (hasattr(sqli_scanner, 'payloads') and len(sqli_scanner.payloads) > 0 and
             hasattr(xss_scanner, 'payloads') and len(xss_scanner.payloads) > 0 and
+            hasattr(ssji_scanner, 'ssji_payloads') and len(ssji_scanner.ssji_payloads) > 0) and
             hasattr(cmdi_scanner, 'payloads') and len(cmdi_scanner.payloads) > 0):
             print("✅ Scanners initialized with payloads")
             return True
