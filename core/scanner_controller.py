@@ -29,6 +29,13 @@ from scanners.xpath.xpath_injection_scanner import XPathInjectionScanner
 from scanners.trace.trace_scanner import TraceScanner
 from scanners.ssji.ssji_scanner import SSJIScanner
 from scanners.put.put_scanner import PutScanner
+from scanners.code_injection.perl_injection import PerlCodeInjectionScanner
+from scanners.cors.cors_scanner import CORSScanner
+from scanners.crlf.crlf_scanner import CRLFScanner
+from scanners.clickjacking.clickjacking_scanner import ClickjackingScanner
+from scanners.nosql.nosql_scanner import NoSQLScanner
+from scanners.host_header.host_header_scanner import HostHeaderScanner
+from scanners.ssti.ssti_scanner import SSTIScanner
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
@@ -67,6 +74,13 @@ class ScannerController:
             'xpath': XPathInjectionScanner(config_manager),
             'trace': TraceScanner(config_manager),
             'put': PutScanner(config_manager),
+            'perl_injection': PerlCodeInjectionScanner(config_manager),
+            'cors': CORSScanner(config_manager),
+            'crlf': CRLFScanner(config_manager),
+            'clickjacking': ClickjackingScanner(config_manager),
+            'nosql': NoSQLScanner(config_manager),
+            'host_header': HostHeaderScanner(config_manager),
+            'ssti': SSTIScanner(config_manager),
         }
     
     def run_scan(self, scan_type: str) -> ScanResults:

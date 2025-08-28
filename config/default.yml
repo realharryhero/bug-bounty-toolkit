@@ -103,6 +103,40 @@ scanners:
     enabled: true
     confidence_threshold: 0.6
 
+  put:
+    enabled: true
+
+  perl_injection:
+    enabled: true
+    payload_file: "payloads/perl_injection_payloads.txt"
+    test_types: ["direct", "blind", "time"]
+    time_delay: 5
+    confidence_threshold: 0.7
+
+  cors:
+    enabled: true
+    confidence_threshold: 0.7
+
+  crlf:
+    enabled: true
+    confidence_threshold: 0.7
+
+  clickjacking:
+    enabled: true
+    confidence_threshold: 0.6
+
+  nosql:
+    enabled: true
+    confidence_threshold: 0.7
+
+  host_header:
+    enabled: true
+    confidence_threshold: 0.6
+
+  ssti:
+    enabled: true
+    confidence_threshold: 0.8
+
 # Reconnaissance configurations
 recon:
   subdomain_enum:

