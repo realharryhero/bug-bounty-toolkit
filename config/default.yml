@@ -64,6 +64,12 @@ scanners:
     test_uuid_ids: true
     test_encoded_ids: true
 
+  ldap:
+    enabled: true
+    payload_file: "payloads/ldap_payloads.txt"
+    test_types: ["error", "blind"]
+    confidence_threshold: 0.7
+
 # Reconnaissance configurations
 recon:
   subdomain_enum:
