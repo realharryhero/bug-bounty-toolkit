@@ -10,11 +10,14 @@ from typing import List, Dict, Any, Optional
 from core.config.config_manager import ConfigManager
 from core.reporting.report_generator import Finding, Severity
 from core.utils.logger import get_security_logger
+from scanners.base_scanner import BaseScanner, register_scanner
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
 
-class XXEScanner:
+
+@register_scanner('xxe')
+class XXEScanner(BaseScanner):
     """XML External Entity vulnerability scanner."""
     
     def __init__(self, config_manager: ConfigManager):
@@ -24,8 +27,7 @@ class XXEScanner:
         Args:
             config_manager: Configuration manager instance
         """
-        self.config = config_manager.get_scanner_config('xxe')
-        self.general_config = config_manager.get('general')
+        super().__init__(config_manager)
         
         # XXE payloads for different purposes
         self.file_disclosure_payloads = [
