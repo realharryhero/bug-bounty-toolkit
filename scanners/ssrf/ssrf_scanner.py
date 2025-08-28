@@ -11,6 +11,7 @@ from typing import List, Dict, Any, Optional
 from core.config.config_manager import ConfigManager
 from core.reporting.report_generator import Finding, Severity
 from core.utils.logger import get_security_logger
+from core.utils.oob_interaction import OOBInteraction
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
@@ -27,7 +28,15 @@ class SSRFScanner:
         """
         self.config = config_manager.get_scanner_config('ssrf')
         self.general_config = config_manager.get('general')
+        self.oob_interaction: Optional[OOBInteraction] = None
         
+        if self.config.get('test_out_of_band'):
+            oob_domain = self.config.get('oob_domain')
+            if oob_domain:
+                self.oob_interaction = OOBInteraction(oob_domain)
+            else:
+                logger.warning("Out-of-band SSRF testing is enabled, but no oob_domain is configured.")
+
         # Common SSRF target URLs
         self.ssrf_targets = [
             "http://localhost",
@@ -99,6 +108,10 @@ class SSRFScanner:
                 
                 # Test blind SSRF
                 findings.extend(self._test_blind_ssrf(point))
+
+                # Test Out-of-Band SSRF
+                if self.oob_interaction:
+                    findings.extend(self._test_out_of_band_ssrf(point))
                 
         except Exception as e:
             logger.error(f"SSRF scan failed: {str(e)}")
@@ -478,3 +491,56 @@ class SSRFScanner:
                 'http://metadata.google.internal'
             ]
         }
+
+    def _test_out_of_band_ssrf(self, injection_point: Dict[str, Any]) -> List[Finding]:
+        """Test for Out-of-Band SSRF using a callback domain."""
+        findings = []
+        if not self.oob_interaction:
+            return findings
+
+        try:
+            oob_payload = self.oob_interaction.generate_payload()
+            http_payload = f"http://{oob_payload}"
+
+            if injection_point['type'] == 'url_param':
+                parsed_url = urlparse(injection_point['url'])
+                params = parse_qs(parsed_url.query)
+                params[injection_point['parameter']] = [http_payload]
+                new_query = urlencode(params, doseq=True)
+                test_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{new_query}"
+                requests.get(test_url, timeout=self.general_config.get('timeout', 10), verify=False)
+
+            elif injection_point['type'] == 'form_param':
+                data = {injection_point['parameter']: http_payload}
+                requests.post(injection_point['url'], data=data, timeout=self.general_config.get('timeout', 10), verify=False)
+
+            elif injection_point['type'] == 'json_param':
+                json_data = {injection_point['parameter']: http_payload}
+                requests.post(injection_point['url'], json=json_data, headers={'Content-Type': 'application/json'}, timeout=self.general_config.get('timeout', 10), verify=False)
+
+            else:
+                return findings
+
+            # Wait a moment for the OOB request to be made
+            time.sleep(5)
+
+            if self.oob_interaction.check_interaction(oob_payload):
+                finding = Finding(
+                    title="Out-of-Band SSRF (DNS-Based)",
+                    severity=Severity.HIGH,
+                    confidence=0.9,
+                    description=f"Out-of-band SSRF detected via DNS interaction at parameter '{injection_point['parameter']}'.",
+                    target=injection_point['url'],
+                    vulnerability_type="Server-Side Request Forgery",
+                    evidence=f"A DNS lookup was observed for the payload: {oob_payload}",
+                    impact="The application can be forced to make arbitrary DNS lookups, which can be used for data exfiltration or to confirm vulnerabilities.",
+                    remediation="Implement URL validation, whitelist allowed hosts, and restrict server-side requests."
+                )
+                findings.append(finding)
+
+        except requests.exceptions.RequestException as e:
+            logger.debug(f"Request failed during OOB SSRF test: {str(e)}")
+        except Exception as e:
+            logger.error(f"Error testing out-of-band SSRF: {str(e)}")
+
+        return findings

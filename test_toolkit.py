@@ -8,6 +8,7 @@ import os
 import tempfile
 import shutil
 from pathlib import Path
+import socket
 import unittest
 from unittest.mock import patch, Mock
 
@@ -147,6 +148,8 @@ def test_reporting():
         print(f"❌ Reporting error: {e}")
         return False
 
+from unittest.mock import patch
+
 def test_scanners():
     """Test scanner initialization."""
     print("Testing scanners...")
@@ -157,6 +160,7 @@ def test_scanners():
         from scanners.xss.xss_scanner import XSSScanner
         from scanners.csrf.csrf_scanner import CSRFScanner
         from scanners.traversal.directory_traversal_scanner import DirectoryTraversalScanner
+        from scanners.ssrf.ssrf_scanner import SSRFScanner
         from scanners.ssji.ssji_scanner import SSJIScanner    
         from scanners.put.put_scanner import PutScanner
         config_manager = ConfigManager("config/default.yml")
@@ -166,6 +170,13 @@ def test_scanners():
         xss_scanner = XSSScanner(config_manager)
         csrf_scanner = CSRFScanner(config_manager)
         traversal_scanner = DirectoryTraversalScanner(config_manager)
+        ssrf_scanner = SSRFScanner(config_manager)
+
+        # Check if payloads are loaded
+        if (hasattr(sqli_scanner, 'payloads') and len(sqli_scanner.payloads) > 0 and
+            hasattr(xss_scanner, 'payloads') and len(xss_scanner.payloads) > 0 and
+            hasattr(ssrf_scanner, 'oob_interaction')):
+            print("✅ Scanners initialized with payloads and OOB interaction")
         ssji_scanner = SSJIScanner(config_manager)
         put_scanner = PutScanner(config_manager)
         cmdi_scanner = CommandInjectionScanner(config_manager)
@@ -184,6 +195,31 @@ def test_scanners():
     except Exception as e:
         print(f"❌ Scanner error: {e}")
         return False
+
+def test_oob_interaction():
+    """Test the OOBInteraction utility."""
+    print("Testing OOB Interaction...")
+    try:
+        from core.utils.oob_interaction import OOBInteraction
+        oob = OOBInteraction("test.com")
+        payload = oob.generate_payload()
+
+        # Initially, no interaction
+        with patch('socket.gethostbyname', side_effect=socket.gaierror):
+            if oob.check_interaction(payload):
+                print("❌ OOB interaction should not be detected yet.")
+                return False
+
+        # Simulate a DNS lookup
+        with patch('socket.gethostbyname', return_value='127.0.0.1'):
+            if not oob.check_interaction(payload):
+                print("❌ OOB interaction was not detected after simulated lookup.")
+                return False
+
+        print("✅ OOB Interaction utility working")
+        return True
+    except Exception as e:
+        print(f"❌ OOB Interaction error: {e}")
 
 def test_ldap_scanner():
     """Test the LDAP injection scanner."""
@@ -316,6 +352,7 @@ def main():
         test_authorization,
         test_reporting,
         test_scanners,
+        test_oob_interaction
         test_ldap_scanner
         test_xpath_scanner
         test_cmdi_scanner
