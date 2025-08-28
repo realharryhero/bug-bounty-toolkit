@@ -26,6 +26,7 @@ def test_imports():
         from scanners.xss.xss_scanner import XSSScanner
         from scanners.csrf.csrf_scanner import CSRFScanner
         from scanners.traversal.directory_traversal_scanner import DirectoryTraversalScanner
+        from scanners.rci.ruby_code_injection_scanner import RubyCodeInjectionScanner
         print("✅ All imports successful")
         return True
     except ImportError as e:
@@ -157,6 +158,32 @@ def test_scanners():
         print(f"❌ Scanner error: {e}")
         return False
 
+def test_rci_scanner():
+    """Test RCI scanner initialization."""
+    print("Testing RCI scanner...")
+
+    try:
+        from core.config.config_manager import ConfigManager
+        from scanners.rci.ruby_code_injection_scanner import RubyCodeInjectionScanner
+
+        config_manager = ConfigManager("config/default.yml")
+
+        # Initialize scanner
+        rci_scanner = RubyCodeInjectionScanner(config_manager)
+
+        # Check if payloads are loaded
+        if (hasattr(rci_scanner, 'direct_payloads') and len(rci_scanner.direct_payloads) > 0 and
+            hasattr(rci_scanner, 'time_payloads') and len(rci_scanner.time_payloads) > 0):
+            print("✅ RCI Scanner initialized with payloads")
+            return True
+        else:
+            print("❌ RCI Scanner not properly initialized")
+            return False
+
+    except Exception as e:
+        print(f"❌ RCI Scanner error: {e}")
+        return False
+
 def main():
     """Run all tests."""
     print("=" * 50)
@@ -168,7 +195,8 @@ def main():
         test_configuration,
         test_authorization,
         test_reporting,
-        test_scanners
+        test_scanners,
+        test_rci_scanner
     ]
     
     passed = 0

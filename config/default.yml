@@ -58,6 +58,10 @@ scanners:
     payload_file: "payloads/cmdi_payloads.txt"
     test_types: ["direct", "blind", "time"]
   
+  rci:
+    enabled: true
+    test_types: ["direct", "blind"]
+
   idor:
     enabled: true
     test_numeric_ids: true
