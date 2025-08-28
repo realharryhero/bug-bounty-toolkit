@@ -64,6 +64,10 @@ scanners:
     test_uuid_ids: true
     test_encoded_ids: true
 
+  bac:
+    enabled: true
+    confidence_threshold: 0.6
+
 # Reconnaissance configurations
 recon:
   subdomain_enum:
