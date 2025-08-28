@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Assessment Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+        .summary { background-color: #f4f4f4; padding: 15px; border-radius: 5px; margin-bottom: 30px; }
+        .finding { border: 1px solid #ddd; margin: 20px 0; padding: 15px; border-radius: 5px; }
+        .critical { border-left: 5px solid #dc3545; }
+        .high { border-left: 5px solid #fd7e14; }
+        .medium { border-left: 5px solid #ffc107; }
+        .low { border-left: 5px solid #28a745; }
+        .info { border-left: 5px solid #17a2b8; }
+        .severity { font-weight: bold; text-transform: uppercase; }
+        .payload { background-color: #f8f9fa; padding: 10px; border-radius: 3px; font-family: monospace; margin: 10px 0; }
+        .metadata { font-size: 0.9em; color: #666; }
+        .statistics { display: flex; justify-content: space-around; margin: 20px 0; }
+        .stat-box { text-align: center; padding: 15px; background-color: #e9ecef; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Security Assessment Report</h1>
+        <p><strong>Target:</strong> {{target}}</p>
+        <p><strong>Scan Type:</strong> {{scan_type}}</p>
+        <p><strong>Date:</strong> {{start_time}} - {{end_time}}</p>
+        <p><strong>Duration:</strong> {{duration}} seconds</p>
+    </div>
+    
+    <div class="summary">
+        <h2>Executive Summary</h2>
+        <div class="statistics">
+            <div class="stat-box">
+                <h3>{{total_findings}}</h3>
+                <p>Total Findings</p>
+            </div>
+            <div class="stat-box">
+                <h3>{{critical_count}}</h3>
+                <p>Critical</p>
+            </div>
+            <div class="stat-box">
+                <h3>{{high_count}}</h3>
+                <p>High</p>
+            </div>
+            <div class="stat-box">
+                <h3>{{medium_count}}</h3>
+                <p>Medium</p>
+            </div>
+            <div class="stat-box">
+                <h3>{{low_count}}</h3>
+                <p>Low</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="findings">
+        <h2>Detailed Findings</h2>
+        {{findings_html}}
+    </div>
+    
+    <div class="metadata">
+        <h2>Scan Metadata</h2>
+        <pre>{{metadata_json}}</pre>
+    </div>
+</body>
+</html>

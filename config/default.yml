@@ -1,0 +1,125 @@
+# Default Configuration for Bug Bounty Toolkit
+
+general:
+  threads: 10
+  timeout: 30
+  delay: 1.0
+  user_agent: "BugBountyToolkit/1.0 (Ethical Security Research)"
+  max_retries: 3
+  rate_limit:
+    requests_per_second: 5
+    burst_limit: 20
+
+# Scanner configurations
+scanners:
+  sqli:
+    enabled: true
+    payload_file: "payloads/sqli_payloads.txt"
+    test_types: ["error", "blind", "time", "union"]
+    time_delay: 5
+    confidence_threshold: 0.7
+  
+  xss:
+    enabled: true
+    payload_file: "payloads/xss_payloads.txt"
+    test_types: ["reflected", "stored", "dom"]
+    confidence_threshold: 0.8
+  
+  csrf:
+    enabled: true
+    check_tokens: true
+    check_referrer: true
+    check_origin: true
+  
+  auth:
+    enabled: true
+    test_session_management: true
+    test_privilege_escalation: true
+    common_passwords: "payloads/common_passwords.txt"
+  
+  traversal:
+    enabled: true
+    payload_file: "payloads/traversal_payloads.txt"
+    encodings: ["url", "double_url", "unicode"]
+  
+  ssrf:
+    enabled: true
+    payload_file: "payloads/ssrf_payloads.txt"
+    test_internal_ips: true
+    test_cloud_metadata: true
+  
+  xxe:
+    enabled: true
+    payload_file: "payloads/xxe_payloads.txt"
+    test_out_of_band: true
+  
+  cmdi:
+    enabled: true
+    payload_file: "payloads/cmdi_payloads.txt"
+    test_types: ["direct", "blind", "time"]
+  
+  idor:
+    enabled: true
+    test_numeric_ids: true
+    test_uuid_ids: true
+    test_encoded_ids: true
+  
+  trace:
+    enabled: true
+    
+  xpath:
+    enabled: true
+    payload_file: "payloads/xpath_payloads.txt"
+    test_types: ["error", "blind"]
+    confidence_threshold: 0.7
+
+# Reconnaissance configurations
+recon:
+  subdomain_enum:
+    enabled: true
+    wordlist: "payloads/subdomains.txt"
+    dns_servers: ["8.8.8.8", "1.1.1.1"]
+    check_certificate_transparency: true
+    brute_force: true
+  
+  port_scan:
+    enabled: true
+    common_ports: [21, 22, 23, 25, 53, 80, 110, 143, 443, 993, 995, 8080, 8443]
+    full_scan: false
+    banner_grab: true
+    service_detection: true
+  
+  tech_fingerprint:
+    enabled: true
+    check_headers: true
+    check_cookies: true
+    check_html_patterns: true
+    check_js_libraries: true
+  
+  url_discovery:
+    enabled: true
+    wordlist: "payloads/directories.txt"
+    extensions: [".php", ".asp", ".aspx", ".jsp", ".html", ".js"]
+    check_robots_txt: true
+    check_sitemap_xml: true
+
+# Reporting configuration
+reporting:
+  include_screenshots: false
+  include_payload_details: true
+  confidence_filter: 0.5
+  formats:
+    html:
+      template: "templates/report.html"
+      include_css: true
+    json:
+      pretty_print: true
+    pdf:
+      template: "templates/report_pdf.html"
+
+# Output configuration
+output:
+  directory: "reports"
+  timestamp_format: "%Y%m%d_%H%M%S"
+  log_level: "INFO"
+  save_raw_responses: false

