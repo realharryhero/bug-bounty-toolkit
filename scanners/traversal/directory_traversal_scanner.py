@@ -7,6 +7,7 @@ import logging
 import requests
 from urllib.parse import urljoin
 from typing import List, Dict, Any, Optional
+from bs4 import BeautifulSoup
 from core.config.config_manager import ConfigManager
 from core.reporting.report_generator import Finding, Severity
 from core.utils.logger import get_security_logger
@@ -95,7 +96,8 @@ class DirectoryTraversalScanner:
         
         try:
             findings.extend(self._test_path_traversal(target))
-            
+            findings.extend(self._test_post_path_traversal(target))
+
             logger.info(f"Directory traversal scan completed - {len(findings)} potential vulnerabilities found")
             
         except Exception as e:
@@ -108,7 +110,7 @@ class DirectoryTraversalScanner:
         """Test for path traversal vulnerabilities."""
         findings = []
         
-        for payload in self.payloads[:20]:  # Limit payloads for performance
+        for payload in self.payloads:
             # Test different parameter positions
             test_urls = [
                 f"{target}?file={payload}",
@@ -143,7 +145,6 @@ class DirectoryTraversalScanner:
                             findings.append(finding)
                             security_logger.log_vulnerability_found("DIRECTORY_TRAVERSAL", test_url, "HIGH", confidence)
                             logger.warning(f"Directory traversal vulnerability found: {test_url}")
-                            return findings  # Stop after first finding to avoid duplicates
                     
                 except Exception as e:
                     logger.debug(f"Request failed for traversal payload {payload}: {str(e)}")
@@ -230,3 +231,73 @@ class DirectoryTraversalScanner:
                 evidence_lines.append(line)
         
         return "Response content: " + " | ".join(evidence_lines) if evidence_lines else "File content detected in response"
+
+    def _test_post_path_traversal(self, target: str) -> List[Finding]:
+        """Test for path traversal vulnerabilities in POST requests."""
+        findings = []
+        try:
+            response = requests.get(target, timeout=self.general_config.get('timeout', 30))
+            soup = BeautifulSoup(response.text, 'html.parser')
+            forms = soup.find_all('form')
+
+            if not forms:
+                return findings
+
+            logger.info(f"Found {len(forms)} forms on {target} to test for POST-based traversal.")
+
+            for form in forms:
+                action = form.get('action', '')
+                method = form.get('method', 'get').lower()
+
+                if method != 'post':
+                    continue
+
+                form_url = urljoin(target, action)
+                inputs = form.find_all(['input', 'textarea', 'select'])
+
+                for payload in self.payloads:
+                    for input_tag in inputs:
+                        param_name = input_tag.get('name')
+                        if not param_name:
+                            continue
+
+                        # Create data payload for POST request
+                        data = {}
+                        for i in inputs:
+                            name = i.get('name')
+                            if name:
+                                value = i.get('value', 'test')
+                                data[name] = value
+
+                        data[param_name] = payload
+
+                        try:
+                            post_response = requests.post(form_url, data=data, timeout=self.general_config.get('timeout', 30))
+
+                            if post_response.status_code == 200:
+                                confidence = self._detect_traversal_success(post_response.text, payload)
+
+                                if confidence >= 0.6:
+                                    finding = Finding(
+                                        title="Directory Traversal Vulnerability (POST-based)",
+                                        severity=Severity.HIGH,
+                                        confidence=confidence,
+                                        description="Directory traversal vulnerability detected in a POST request. The application allows access to files outside the intended directory through path manipulation in a POST parameter.",
+                                        target=form_url,
+                                        vulnerability_type="Directory Traversal",
+                                        payload=payload,
+                                        evidence=self._get_traversal_evidence(post_response.text, payload),
+                                        impact="An attacker could potentially access sensitive files on the server, including configuration files, source code, or system files.",
+                                        remediation="Implement proper input validation for all POST parameters, use whitelisting for allowed files, and avoid direct file path concatenation with user input."
+                                    )
+
+                                    findings.append(finding)
+                                    security_logger.log_vulnerability_found("DIRECTORY_TRAVERSAL_POST", form_url, "HIGH", confidence)
+                                    logger.warning(f"POST-based directory traversal vulnerability found: {form_url} with param '{param_name}'")
+                        except Exception as e:
+                            logger.debug(f"POST request failed for traversal payload {payload}: {str(e)}")
+
+        except requests.RequestException as e:
+            logger.warning(f"Could not fetch target {target} to check for forms: {e}")
+
+        return findings

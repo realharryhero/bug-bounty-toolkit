@@ -177,7 +177,7 @@ bug-bounty-toolkit/
 | XSS | Reflected, stored, DOM-based testing | ✅ Implemented |
 | CSRF | Token validation and bypass detection | ✅ Implemented |
 | Auth Bypass | Session and privilege escalation testing | 🚧 In Progress |
-| Directory Traversal | Path traversal with encoding | 🚧 In Progress |
+| Directory Traversal | Path traversal with encoding | ✅ Implemented |
 | SSRF | Server-side request forgery | 🚧 In Progress |
 | XXE | XML external entity vulnerabilities | 🚧 In Progress |
 | Command Injection | OS command injection detection | 🚧 In Progress |
