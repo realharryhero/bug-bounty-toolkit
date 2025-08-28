@@ -28,82 +28,35 @@ class CommandInjectionScanner:
         self.config = config_manager.get_scanner_config('cmdi')
         self.general_config = config_manager.get('general')
         
-        # Command injection payloads for different OS
-        self.unix_payloads = [
-            "; cat /etc/passwd",
-            "| cat /etc/passwd",
-            "&& cat /etc/passwd",
-            "; id",
-            "| id",
-            "&& id",
-            "; whoami",
-            "| whoami",
-            "&& whoami",
-            "; uname -a",
-            "| uname -a",
-            "`cat /etc/passwd`",
-            "$(cat /etc/passwd)",
-            "`id`",
-            "$(id)",
-            "`whoami`",
-            "$(whoami)",
-        ]
-        
-        self.windows_payloads = [
-            "& type C:\\windows\\system32\\drivers\\etc\\hosts",
-            "| type C:\\windows\\system32\\drivers\\etc\\hosts",
-            "&& type C:\\windows\\system32\\drivers\\etc\\hosts",
-            "& whoami",
-            "| whoami",
-            "&& whoami",
-            "& dir",
-            "| dir",
-            "&& dir",
-            "& echo %USERNAME%",
-            "| echo %USERNAME%",
-        ]
-        
-        # Time-based payloads for blind detection
-        self.time_payloads = [
-            "; sleep 5",
-            "| sleep 5",
-            "&& sleep 5",
-            "`sleep 5`",
-            "$(sleep 5)",
-            "& timeout 5",
-            "| timeout 5",
-            "&& timeout 5",
-        ]
-        
-        # Success indicators for different OS
-        self.unix_indicators = [
-            'root:x:0:0:',  # /etc/passwd
-            'daemon:',
-            '/bin/',
-            '/usr/',
-            '/sbin/',
-            'uid=',  # id command output
-            'gid=',
-            'groups=',
-            'Linux',  # uname output
-            'Unix',
-            'GNU',
-        ]
-        
-        self.windows_indicators = [
-            '# Copyright',  # Windows hosts file
-            'localhost',
-            '127.0.0.1',
-            'SYSTEM\\',
-            'Program Files',
-            'Windows',
-            'C:\\',
-            'D:\\',
-        ]
-        
         # Load payloads
         self.payloads = self._load_payloads()
     
+    def _load_payloads(self) -> List[str]:
+        """Load command injection payloads from file."""
+        payload_file = self.config.get('payload_file', 'payloads/cmdi_payloads.txt')
+        payloads = []
+
+        try:
+            with open(payload_file, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#'):
+                        payloads.append(line)
+
+            logger.info(f"Loaded {len(payloads)} command injection payloads")
+
+        except FileNotFoundError:
+            logger.warning(f"Payload file not found: {payload_file}")
+            # Use built-in payloads as fallback
+            payloads = [
+                "; whoami",
+                "| whoami",
+                "&& id",
+                "& dir"
+            ]
+
+        return payloads
+
     def scan(self, target_url: str) -> List[Finding]:
         """
         Scan target for command injection vulnerabilities.
@@ -120,17 +73,22 @@ class CommandInjectionScanner:
         security_logger.log_scan_start("command_injection", target_url)
         
         try:
+            test_types = self.config.get('test_types', ['direct', 'blind', 'time'])
+
             # Find potential injection points
             injection_points = self._find_injection_points(target_url)
             
             for point in injection_points:
-                # Test direct command injection
-                findings.extend(self._test_direct_injection(point))
+                if 'direct' in test_types:
+                    findings.extend(self._test_direct_injection(point))
                 
-                # Test blind command injection
-                findings.extend(self._test_blind_injection(point))
+                if 'blind' in test_types:
+                    findings.extend(self._test_blind_injection(point))
                 
-                # Test encoded payloads
+                if 'time' in test_types:
+                    findings.extend(self._test_time_based_injection(point))
+
+                # Test for encoded payloads separately, as it's a different technique
                 findings.extend(self._test_encoded_injection(point))
                 
         except Exception as e:
@@ -141,100 +99,106 @@ class CommandInjectionScanner:
         return findings
     
     def _find_injection_points(self, target_url: str) -> List[Dict[str, Any]]:
-        """Find potential command injection points."""
+        """Find potential command injection points in URL parameters, forms, and headers."""
         points = []
         
         try:
             response = requests.get(target_url, timeout=self.general_config.get('timeout', 10))
             
-            # Parse URL for existing parameters
+            # 1. URL Parameters
             parsed_url = urlparse(target_url)
             query_params = parse_qs(parsed_url.query)
             
-            for param_name, param_values in query_params.items():
-                # Look for parameters that might execute commands
-                if any(keyword in param_name.lower() for keyword in [
-                    'cmd', 'command', 'exec', 'system', 'shell', 'run',
-                    'file', 'filename', 'path', 'script', 'ping', 'host'
-                ]):
-                    points.append({
-                        'type': 'url_param',
-                        'url': target_url,
-                        'parameter': param_name,
-                        'method': 'GET'
-                    })
-            
-            # Look for forms that might execute commands
-            form_patterns = [
-                r'<input[^>]*name=[\'"]([^\'\"]*(?:cmd|command|exec|system|shell|run|file|filename|path|script|ping|host)[^\'\"]*)[\'"][^>]*>',
-                r'<textarea[^>]*name=[\'"]([^\'\"]*(?:cmd|command|exec|system|shell|run|file|filename|path|script|ping|host)[^\'\"]*)[\'"][^>]*>',
-            ]
-            
-            for pattern in form_patterns:
-                matches = re.finditer(pattern, response.text, re.IGNORECASE)
-                for match in matches:
-                    param_name = match.group(1)
+            for param, values in query_params.items():
+                points.append({
+                    'type': 'url_param',
+                    'url': target_url,
+                    'parameter': param,
+                    'method': 'GET'
+                })
+
+            # 2. Forms
+            # A more robust regex to find forms and their inputs
+            forms = re.finditer(r'<form[^>]*action=[\'"]([^\'"]*)[\'"][^>]*>(.*?)</form>', response.text, re.IGNORECASE | re.DOTALL)
+            for form_match in forms:
+                action = form_match.group(1)
+                form_content = form_match.group(2)
+                form_url = urljoin(target_url, action)
+
+                # Find all input and textarea names in the form
+                input_names = re.findall(r'<input[^>]*name=[\'"]([^\'"]*)[\'"]', form_content, re.IGNORECASE)
+                textarea_names = re.findall(r'<textarea[^>]*name=[\'"]([^\'"]*)[\'"]', form_content, re.IGNORECASE)
+
+                for param_name in set(input_names + textarea_names):
                     points.append({
                         'type': 'form_param',
-                        'url': target_url,
+                        'url': form_url,
                         'parameter': param_name,
-                        'method': 'POST'
+                        'method': 'POST' # Assuming POST for simplicity, can be improved
                     })
-            
-            # Look for file upload or processing endpoints
-            upload_indicators = ['upload', 'file', 'import', 'process', 'convert']
-            if any(indicator in target_url.lower() for indicator in upload_indicators):
+
+            # 3. Headers
+            # Test common headers that might be processed by the application
+            headers_to_test = ['User-Agent', 'Referer', 'X-Forwarded-For', 'X-Client-IP']
+            for header in headers_to_test:
                 points.append({
-                    'type': 'upload_endpoint',
+                    'type': 'header',
                     'url': target_url,
-                    'parameter': 'filename',
+                    'parameter': header,
+                    'method': 'GET' # Can be tested with POST as well
+                })
+
+            # 4. JSON Body (if applicable, requires a POST request)
+            # This is more complex as we need to know which endpoints accept JSON.
+            # For now, we'll assume that if the word 'api' is in the url, it might accept JSON.
+            if 'api' in target_url:
+                points.append({
+                    'type': 'json_body',
+                    'url': target_url,
+                    'parameter': 'json_root', # Placeholder for the whole body
                     'method': 'POST'
                 })
-            
+
         except Exception as e:
             logger.debug(f"Error finding injection points: {str(e)}")
         
-        return points
+        # Remove duplicate points
+        unique_points = [dict(t) for t in {tuple(d.items()) for d in points}]
+        logger.info(f"Found {len(unique_points)} potential injection points.")
+        return unique_points
     
     def _test_direct_injection(self, injection_point: Dict[str, Any]) -> List[Finding]:
         """Test direct command injection."""
         findings = []
-        
-        # Test both Unix and Windows payloads
-        all_payloads = self.unix_payloads[:3] + self.windows_payloads[:3]  # First 3 of each
-        
-        for payload in all_payloads:
+
+        for payload in self.payloads:
             try:
+                response = None
+                test_url = injection_point['url']
+                headers = {'User-Agent': self.general_config.get('user_agent')}
+
                 if injection_point['type'] == 'url_param':
-                    # Test URL parameter injection
-                    parsed_url = urlparse(injection_point['url'])
+                    parsed_url = urlparse(test_url)
                     params = parse_qs(parsed_url.query)
-                    
-                    original_value = params.get(injection_point['parameter'], ['test'])[0]
+                    original_value = params.get(injection_point['parameter'], [''])[0]
                     params[injection_point['parameter']] = [original_value + payload]
-                    
                     new_query = urlencode(params, doseq=True)
                     test_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{new_query}"
-                    
-                    response = requests.get(test_url, timeout=self.general_config.get('timeout', 10))
+                    response = requests.get(test_url, headers=headers, timeout=self.general_config.get('timeout', 10))
                     
                 elif injection_point['type'] == 'form_param':
-                    # Test form parameter injection
                     data = {injection_point['parameter']: 'test' + payload}
-                    response = requests.post(
-                        injection_point['url'], 
-                        data=data, 
-                        timeout=self.general_config.get('timeout', 10)
-                    )
+                    response = requests.post(test_url, data=data, headers=headers, timeout=self.general_config.get('timeout', 10))
                     
-                elif injection_point['type'] == 'upload_endpoint':
-                    # Test filename injection
-                    files = {'file': ('test' + payload + '.txt', 'test content')}
-                    response = requests.post(
-                        injection_point['url'], 
-                        files=files, 
-                        timeout=self.general_config.get('timeout', 10)
-                    )
+                elif injection_point['type'] == 'header':
+                    headers[injection_point['parameter']] = payload
+                    response = requests.get(test_url, headers=headers, timeout=self.general_config.get('timeout', 10))
+
+                elif injection_point['type'] == 'json_body':
+                    # Create a simple JSON payload. This can be made more sophisticated.
+                    json_payload = {'vulnerable_param': payload}
+                    response = requests.post(test_url, json=json_payload, headers=headers, timeout=self.general_config.get('timeout', 10))
+
                 else:
                     continue
                 
@@ -259,33 +223,40 @@ class CommandInjectionScanner:
         
         return findings
     
-    def _test_blind_injection(self, injection_point: Dict[str, Any]) -> List[Finding]:
-        """Test blind command injection using timing attacks."""
+    def _test_time_based_injection(self, injection_point: Dict[str, Any]) -> List[Finding]:
+        """Test time-based blind command injection."""
         findings = []
         
-        for payload in self.time_payloads[:3]:  # Test first 3 time payloads
+        time_payloads = [p for p in self.payloads if 'sleep' in p or 'ping' in p]
+
+        for payload in time_payloads:
             try:
                 start_time = time.time()
-                
+                response = None
+                test_url = injection_point['url']
+                headers = {'User-Agent': self.general_config.get('user_agent')}
+
                 if injection_point['type'] == 'url_param':
-                    parsed_url = urlparse(injection_point['url'])
+                    parsed_url = urlparse(test_url)
                     params = parse_qs(parsed_url.query)
-                    
-                    original_value = params.get(injection_point['parameter'], ['test'])[0]
+                    original_value = params.get(injection_point['parameter'], [''])[0]
                     params[injection_point['parameter']] = [original_value + payload]
-                    
                     new_query = urlencode(params, doseq=True)
                     test_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{new_query}"
-                    
-                    response = requests.get(test_url, timeout=15)  # Longer timeout for timing
+                    response = requests.get(test_url, headers=headers, timeout=15)
                     
                 elif injection_point['type'] == 'form_param':
                     data = {injection_point['parameter']: 'test' + payload}
-                    response = requests.post(
-                        injection_point['url'], 
-                        data=data, 
-                        timeout=15
-                    )
+                    response = requests.post(test_url, data=data, headers=headers, timeout=15)
+
+                elif injection_point['type'] == 'header':
+                    headers[injection_point['parameter']] = payload
+                    response = requests.get(test_url, headers=headers, timeout=15)
+
+                elif injection_point['type'] == 'json_body':
+                    json_payload = {'vulnerable_param': payload}
+                    response = requests.post(test_url, json=json_payload, headers=headers, timeout=15)
+
                 else:
                     continue
                 
@@ -327,38 +298,109 @@ class CommandInjectionScanner:
         
         return findings
     
+    def _test_blind_injection(self, injection_point: Dict[str, Any]) -> List[Finding]:
+        """Test for blind command injection using boolean-based techniques."""
+        findings = []
+
+        true_payload = "&& whoami"
+        false_payload = "&& non_existent_command_12345"
+
+        try:
+            # Test true condition
+            true_response = self._send_request_with_payload(injection_point, true_payload)
+
+            # Test false condition
+            false_response = self._send_request_with_payload(injection_point, false_payload)
+
+            if true_response and false_response:
+                # Compare responses
+                if (true_response.status_code == 200 and false_response.status_code == 200 and
+                    len(true_response.text) != len(false_response.text)):
+
+                    finding = Finding(
+                        title="Blind OS Command Injection",
+                        severity=Severity.HIGH,
+                        confidence=0.7,
+                        description="Blind command injection detected through content analysis.",
+                        target=injection_point['url'],
+                        vulnerability_type="Command Injection",
+                        evidence=f"Response length difference - True: {len(true_response.text)}, False: {len(false_response.text)}",
+                        impact="Attacker may be able to execute arbitrary commands without direct output.",
+                        remediation="Use parameterized commands and validate all user input."
+                    )
+                    findings.append(finding)
+
+        except Exception as e:
+            logger.debug(f"Error testing blind injection: {str(e)}")
+
+        return findings
+
+    def _send_request_with_payload(self, injection_point: Dict[str, Any], payload: str) -> Optional[requests.Response]:
+        """Helper function to send a request with a given payload."""
+        test_url = injection_point['url']
+        headers = {'User-Agent': self.general_config.get('user_agent')}
+        response = None
+
+        try:
+            if injection_point['type'] == 'url_param':
+                parsed_url = urlparse(test_url)
+                params = parse_qs(parsed_url.query)
+                original_value = params.get(injection_point['parameter'], [''])[0]
+                params[injection_point['parameter']] = [original_value + payload]
+                new_query = urlencode(params, doseq=True)
+                test_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{new_query}"
+                response = requests.get(test_url, headers=headers, timeout=self.general_config.get('timeout', 10))
+
+            elif injection_point['type'] == 'form_param':
+                data = {injection_point['parameter']: 'test' + payload}
+                response = requests.post(test_url, data=data, headers=headers, timeout=self.general_config.get('timeout', 10))
+
+            elif injection_point['type'] == 'header':
+                headers[injection_point['parameter']] = payload
+                response = requests.get(test_url, headers=headers, timeout=self.general_config.get('timeout', 10))
+
+            elif injection_point['type'] == 'json_body':
+                json_payload = {'vulnerable_param': payload}
+                response = requests.post(test_url, json=json_payload, headers=headers, timeout=self.general_config.get('timeout', 10))
+
+        except Exception as e:
+            logger.debug(f"Request failed for payload {payload}: {str(e)}")
+
+        return response
+
     def _test_encoded_injection(self, injection_point: Dict[str, Any]) -> List[Finding]:
         """Test encoded command injection payloads."""
         findings = []
         
-        # URL encoded payloads
-        encoded_payloads = [
-            "%3B%20cat%20%2Fetc%2Fpasswd",  # ; cat /etc/passwd
-            "%7C%20id",  # | id
-            "%26%26%20whoami",  # && whoami
-        ]
-        
+        encoded_payloads = [p for p in self.payloads if '%' in p]
+
         for payload in encoded_payloads:
             try:
+                response = None
+                test_url = injection_point['url']
+                headers = {'User-Agent': self.general_config.get('user_agent')}
+
                 if injection_point['type'] == 'url_param':
-                    parsed_url = urlparse(injection_point['url'])
+                    parsed_url = urlparse(test_url)
                     params = parse_qs(parsed_url.query)
-                    
-                    original_value = params.get(injection_point['parameter'], ['test'])[0]
-                    params[injection_point['parameter']] = [original_value + payload]
-                    
-                    new_query = urlencode(params, doseq=True)
-                    test_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{new_query}"
-                    
-                    response = requests.get(test_url, timeout=self.general_config.get('timeout', 10))
+                    original_value = params.get(injection_point['parameter'], [''])[0]
+                    # The payload is already encoded, so we append it directly
+                    test_url = f"{injection_point['url'].split('?')[0]}?{injection_point['parameter']}={original_value}{payload}"
+                    response = requests.get(test_url, headers=headers, timeout=self.general_config.get('timeout', 10))
                     
                 elif injection_point['type'] == 'form_param':
                     data = {injection_point['parameter']: 'test' + payload}
-                    response = requests.post(
-                        injection_point['url'], 
-                        data=data, 
-                        timeout=self.general_config.get('timeout', 10)
-                    )
+                    response = requests.post(test_url, data=data, headers=headers, timeout=self.general_config.get('timeout', 10))
+
+                # Encoded payloads in headers or JSON are less common, but we can add them for completeness
+                elif injection_point['type'] == 'header':
+                    headers[injection_point['parameter']] = payload
+                    response = requests.get(test_url, headers=headers, timeout=self.general_config.get('timeout', 10))
+
+                elif injection_point['type'] == 'json_body':
+                    json_payload = {'vulnerable_param': payload}
+                    response = requests.post(test_url, json=json_payload, headers=headers, timeout=self.general_config.get('timeout', 10))
+
                 else:
                     continue
                 
@@ -384,62 +426,61 @@ class CommandInjectionScanner:
         return findings
     
     def _is_command_injection_successful(self, response: requests.Response, payload: str) -> bool:
-        """Check if command injection was successful."""
+        """Check if command injection was successful using regex and contextual analysis."""
+        if not response:
+            return False
+
         try:
             response_text = response.text.lower()
             
-            # Check for Unix command output
-            for indicator in self.unix_indicators:
-                if indicator.lower() in response_text:
-                    return True
+            # Regex patterns for common command outputs
+            unix_patterns = {
+                'id': r'uid=\d+\(.*\)\s+gid=\d+\(.*\)',
+                'whoami': r'\b[a-zA-Z0-9_-]+\b', # Matches a simple username
+                'uname': r'linux|darwin|freebsd|unix',
+                'passwd': r'root:x:0:0:'
+            }
             
-            # Check for Windows command output
-            for indicator in self.windows_indicators:
-                if indicator.lower() in response_text:
-                    return True
+            windows_patterns = {
+                'whoami': r'[a-z0-9-]+\\[a-z0-9-]+', # domain\user
+                'ipconfig': r'ipv4 address.*[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}',
+                'dir': r'directory of',
+                'win.ini': r'for 16-bit app support'
+            }
+
+            # Check for payload-specific indicators
+            clean_payload = re.sub(r'[^a-zA-Z0-9]', '', payload).lower()
             
-            # Check for command execution errors
-            error_indicators = [
-                'command not found',
-                'permission denied',
-                'no such file or directory',
-                'syntax error',
-                'bad command',
-                'invalid command',
-                'sh: ',
-                'bash: ',
-                'cmd.exe',
-                'powershell'
+            if 'id' in clean_payload:
+                if re.search(unix_patterns['id'], response_text): return True
+            if 'whoami' in clean_payload:
+                if re.search(unix_patterns['whoami'], response_text) or re.search(windows_patterns['whoami'], response_text): return True
+            if 'uname' in clean_payload:
+                if re.search(unix_patterns['uname'], response_text): return True
+            if 'passwd' in clean_payload:
+                if re.search(unix_patterns['passwd'], response_text): return True
+            if 'ipconfig' in clean_payload:
+                if re.search(windows_patterns['ipconfig'], response_text): return True
+            if 'dir' in clean_payload:
+                if re.search(windows_patterns['dir'], response_text): return True
+            if 'win.ini' in clean_payload:
+                if re.search(windows_patterns['win.ini'], response_text): return True
+
+            # Generic error-based detection
+            error_patterns = [
+                r'command not found',
+                r'permission denied',
+                r'no such file or directory',
+                r'syntax error',
+                r'unrecognized command',
+                r'is not recognized as an internal or external command'
             ]
             
-            for indicator in error_indicators:
-                if indicator in response_text:
-                    return True
-                    
-            # Check if payload is reflected in an error message
-            if payload.replace(';', '').replace('|', '').replace('&', '').strip() in response_text:
-                # Look for execution context
-                execution_contexts = [
-                    'execute',
-                    'command',
-                    'shell',
-                    'system',
-                    'exec',
-                    'process'
-                ]
-                
-                if any(context in response_text for context in execution_contexts):
-                    return True
-                    
+            for pattern in error_patterns:
+                if re.search(pattern, response_text, re.IGNORECASE):
+                    return True # Found an error message, which is a strong indicator
+
         except Exception as e:
             logger.debug(f"Error checking command injection success: {str(e)}")
         
         return False
-    
-    def _load_payloads(self) -> Dict[str, List[str]]:
-        """Load command injection payloads."""
-        return {
-            'unix': self.unix_payloads,
-            'windows': self.windows_payloads,
-            'time_based': self.time_payloads
-        }

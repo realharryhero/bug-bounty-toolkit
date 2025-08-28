@@ -65,6 +65,32 @@ scanners:
     test_numeric_ids: true
     test_uuid_ids: true
     test_encoded_ids: true
+  
+  trace:
+    enabled: true
+    
+  xpath:
+    enabled: true
+    payload_file: "payloads/xpath_payloads.txt"
+    test_types: ["error", "blind"]
+    confidence_threshold: 0.7
+
+  ssji:
+    enabled: true
+    payload_file: "payloads/ssji_payloads.txt"
+    test_types: ["direct", "blind", "error"]
+    time_delay: 5
+    confidence_threshold: 0.7
+
+  ldap:
+    enabled: true
+    payload_file: "payloads/ldap_payloads.txt"
+    test_types: ["error", "blind"]
+    confidence_threshold: 0.7
+
+  bac:
+    enabled: true
+    confidence_threshold: 0.6
 
 # Reconnaissance configurations
 recon:

