@@ -11,14 +11,17 @@ from core.config.config_manager import ConfigManager
 from core.reporting.report_generator import ScanResults, Finding, Severity, ReportGenerator
 from core.utils.logger import get_security_logger
 
-# Import scanner modules
+# Import plugin system
+from scanners.base_scanner import ScannerRegistry
+
+# Import scanner modules for backwards compatibility
+# These will be gradually migrated to the plugin system
 from scanners.sqli.sql_injection_scanner import SQLInjectionScanner
 from scanners.xss.xss_scanner import XSSScanner
 from scanners.csrf.csrf_scanner import CSRFScanner
 from scanners.traversal.directory_traversal_scanner import DirectoryTraversalScanner
 from scanners.auth.auth_bypass_scanner import AuthBypassScanner
 from scanners.ssrf.ssrf_scanner import SSRFScanner
-from scanners.xxe.xxe_scanner import XXEScanner
 from scanners.cmdi.command_injection_scanner import CommandInjectionScanner
 from scanners.idor.idor_scanner import IDORScanner
 from scanners.rci.ruby_code_injection_scanner import RubyCodeInjectionScanner
@@ -48,7 +51,10 @@ class ScannerController:
         self.args = args
         self.report_generator = ReportGenerator()
         
-        # Initialize scanners
+        # Discover and load scanner plugins
+        ScannerRegistry.discover_scanners()
+        
+        # Initialize legacy scanners (will be gradually migrated to plugin system)
         self.scanners = {
             'sqli': SQLInjectionScanner(config_manager),
             'xss': XSSScanner(config_manager),
@@ -56,7 +62,6 @@ class ScannerController:
             'traversal': DirectoryTraversalScanner(config_manager),
             'auth': AuthBypassScanner(config_manager),
             'ssrf': SSRFScanner(config_manager),
-            'xxe': XXEScanner(config_manager),
             'cmdi': CommandInjectionScanner(config_manager),
             'idor': IDORScanner(config_manager),
             'rci': RubyCodeInjectionScanner(config_manager),
@@ -68,7 +73,26 @@ class ScannerController:
             'trace': TraceScanner(config_manager),
             'put': PutScanner(config_manager),
         }
+        
+        # Add plugin-based scanners
+        self._load_plugin_scanners()
     
+    def _load_plugin_scanners(self):
+        """Load scanners from the plugin registry."""
+        registry = ScannerRegistry()
+        for scanner_name, scanner_class in registry.get_all_scanners().items():
+            if scanner_name not in self.scanners:  # Don't override legacy scanners
+                try:
+                    scanner_instance = scanner_class(self.config)
+                    self.scanners[scanner_name] = scanner_instance
+                    logger.debug(f"Loaded plugin scanner: {scanner_name}")
+                except Exception as e:
+                    logger.error(f"Failed to initialize plugin scanner {scanner_name}: {str(e)}")
+    
+    def get_available_scanners(self) -> List[str]:
+        """Get list of all available scanner names."""
+        return list(self.scanners.keys())
+
     def run_scan(self, scan_type: str) -> ScanResults:
         """
         Run the specified vulnerability scan.

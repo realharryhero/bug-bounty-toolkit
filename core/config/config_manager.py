@@ -5,6 +5,7 @@ Configuration Manager - Handles YAML-based configuration files
 import yaml
 import os
 import logging
+import glob
 from typing import Dict, Any, Optional
 from pathlib import Path
 
@@ -164,12 +165,50 @@ class ConfigManager:
             else:
                 self.config = self.default_config.copy()
                 logger.warning(f"Configuration file {self.config_file} not found, using defaults")
+            
+            # Load individual scanner configurations
+            self._load_scanner_configs()
                 
         except Exception as e:
             logger.error(f"Error loading configuration: {str(e)}")
             logger.warning("Falling back to default configuration")
             self.config = self.default_config.copy()
     
+    def _load_scanner_configs(self):
+        """Load individual scanner configuration files from config/scanners/"""
+        scanners_config_dir = Path(self.config_file).parent / 'scanners'
+        
+        if not scanners_config_dir.exists():
+            logger.debug(f"Scanner config directory does not exist: {scanners_config_dir}")
+            return
+        
+        logger.info(f"Loading scanner configurations from: {scanners_config_dir}")
+        
+        # Find all .yml files in the scanners config directory
+        config_files = scanners_config_dir.glob('*.yml')
+        
+        for config_file in config_files:
+            scanner_name = config_file.stem
+            try:
+                with open(config_file, 'r') as f:
+                    scanner_config = yaml.safe_load(f) or {}
+                
+                # Merge with existing scanner config (if any)
+                if 'scanners' not in self.config:
+                    self.config['scanners'] = {}
+                
+                if scanner_name in self.config['scanners']:
+                    self.config['scanners'][scanner_name] = self._merge_configs(
+                        self.config['scanners'][scanner_name], scanner_config
+                    )
+                else:
+                    self.config['scanners'][scanner_name] = scanner_config
+                
+                logger.debug(f"Loaded scanner config: {scanner_name}")
+                
+            except Exception as e:
+                logger.warning(f"Error loading scanner config {config_file}: {str(e)}")
+
     def _merge_configs(self, default: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
         """Recursively merge configuration dictionaries."""
         result = default.copy()

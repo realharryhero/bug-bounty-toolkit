@@ -16,7 +16,30 @@ from core.authorization.auth_manager import AuthorizationManager
 from core.config.config_manager import ConfigManager
 from core.reporting.report_generator import ReportGenerator
 from core.utils.logger import setup_logging
+from scanners.base_scanner import ScannerRegistry
 import __init__
+
+
+def get_available_scanners():
+    """Get list of available scanners for CLI generation."""
+    # Initialize scanner discovery
+    ScannerRegistry.discover_scanners()
+    
+    # Get plugin scanners
+    plugin_scanners = ScannerRegistry.get_scanner_names()
+    
+    # Legacy scanners (still hardcoded until fully migrated)
+    legacy_scanners = [
+        "sqli", "xss", "csrf", "auth", "traversal", "ssrf", "cmdi", "idor", 
+        "xpath", "trace", "bac", "rci", "php_code_injection", "ldap", "ssji"
+    ]
+    
+    # Combine and deduplicate
+    all_scanners = list(set(plugin_scanners + legacy_scanners))
+    all_scanners.append("all")  # Add 'all' option
+    all_scanners.sort()
+    
+    return all_scanners
 
 def main():
     """Main entry point for the bug bounty toolkit."""
@@ -46,9 +69,8 @@ For more information, see the documentation in the docs/ directory.
     
     # Main action groups
     action_group = parser.add_mutually_exclusive_group(required=True)
-    action_group.add_argument("--scan", choices=[
-        "sqli", "xss", "csrf", "auth", "traversal", "ssrf", "xxe", "cmdi", "idor", "xpath", "trace", "bac", "all"
-    ], help="Run vulnerability scanners")
+    action_group.add_argument("--scan", choices=get_available_scanners(),
+                             help="Run vulnerability scanners")
     action_group.add_argument("--recon", choices=[
         "subdomain", "portscan", "fingerprint", "urls", "all"
     ], help="Run reconnaissance modules")

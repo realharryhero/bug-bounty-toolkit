@@ -1,0 +1,16 @@
+enabled: true
+payload_file: "payloads/xxe_payloads.txt"
+test_out_of_band: true
+confidence_threshold: 0.8
+timeout: 30
+max_payload_size: 4096
+test_types:
+  - file_disclosure
+  - ssrf
+  - dos
+file_disclosure_targets:
+  - "/etc/passwd"
+  - "/etc/hosts" 
+  - "/proc/version"
+  - "C:\\windows\\system32\\drivers\\etc\\hosts"
+  - "C:\\boot.ini"
