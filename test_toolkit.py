@@ -8,28 +8,41 @@ import os
 import tempfile
 import shutil
 from pathlib import Path
+import unittest
+from unittest.mock import patch, Mock
 
 # Add project root to Python path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
+
+from core.authorization.auth_manager import AuthorizationManager
+from core.config.config_manager import ConfigManager
+from core.reporting.report_generator import ReportGenerator, Finding, Severity
+from core.utils.logger import setup_logging
+from scanners.sqli.sql_injection_scanner import SQLInjectionScanner
+from scanners.xss.xss_scanner import XSSScanner
+from scanners.csrf.csrf_scanner import CSRFScanner
+from scanners.traversal.directory_traversal_scanner import DirectoryTraversalScanner
+from scanners.xpath.xpath_injection_scanner import XPathInjectionScanner
+from scanners.cmdi.command_injection_scanner import CommandInjectionScanner
 
 def test_imports():
     """Test that all core modules can be imported."""
     print("Testing imports...")
     
     try:
-        from core.authorization.auth_manager import AuthorizationManager
-        from core.config.config_manager import ConfigManager
-        from core.reporting.report_generator import ReportGenerator, Finding, Severity
-        from core.utils.logger import setup_logging
-        from scanners.sqli.sql_injection_scanner import SQLInjectionScanner
-        from scanners.xss.xss_scanner import XSSScanner
-        from scanners.csrf.csrf_scanner import CSRFScanner
-        from scanners.traversal.directory_traversal_scanner import DirectoryTraversalScanner
-        from scanners.cmdi.command_injection_scanner import CommandInjectionScanner
+        assert 'AuthorizationManager' in globals()
+        assert 'ConfigManager' in globals()
+        assert 'ReportGenerator' in globals()
+        assert 'SQLInjectionScanner' in globals()
+        assert 'XSSScanner' in globals()
+        assert 'CSRFScanner' in globals()
+        assert 'DirectoryTraversalScanner' in globals()
+        assert 'XPathInjectionScanner' in globals()
+        assert 'CommandInjectionScanner' in globals()
         print("✅ All imports successful")
         return True
-    except ImportError as e:
+    except (ImportError, AssertionError) as e:
         print(f"❌ Import error: {e}")
         return False
 
@@ -38,8 +51,6 @@ def test_configuration():
     print("Testing configuration...")
     
     try:
-        from core.config.config_manager import ConfigManager
-        
         config_manager = ConfigManager("config/default.yml")
         
         # Test basic config access
@@ -62,8 +73,6 @@ def test_authorization():
     print("Testing authorization...")
     
     try:
-        from core.authorization.auth_manager import AuthorizationManager
-        
         auth_manager = AuthorizationManager()
         
         # Test blacklist functionality
@@ -84,7 +93,6 @@ def test_reporting():
     
     try:
         from datetime import datetime
-        from core.reporting.report_generator import ReportGenerator, Finding, Severity
         
         # Create temporary directory for test
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -131,13 +139,6 @@ def test_scanners():
     print("Testing scanners...")
     
     try:
-        from core.config.config_manager import ConfigManager
-        from scanners.sqli.sql_injection_scanner import SQLInjectionScanner
-        from scanners.xss.xss_scanner import XSSScanner
-        from scanners.csrf.csrf_scanner import CSRFScanner
-        from scanners.traversal.directory_traversal_scanner import DirectoryTraversalScanner
-        from scanners.cmdi.command_injection_scanner import CommandInjectionScanner
-        
         config_manager = ConfigManager("config/default.yml")
         
         # Initialize scanners
@@ -160,6 +161,40 @@ def test_scanners():
     except Exception as e:
         print(f"❌ Scanner error: {e}")
         return False
+
+
+def test_xpath_scanner():
+    """Test the XPath injection scanner."""
+    print("Testing XPath Injection Scanner...")
+
+    config_manager = ConfigManager("config/default.yml")
+    scanner = XPathInjectionScanner(config_manager)
+
+    # Mock responses
+    def mock_requests_get(url, timeout):
+        response = Mock()
+        response.status_code = 200
+        if "query=' or '1'='1" in url:
+            response.text = "<html><body>Found</body></html>"
+        elif "query=' or '1'='2" in url:
+            response.text = "<html><body></body></html>"
+        elif "query='" in url:
+            response.text = "Invalid XPath expression"
+        else:
+            response.text = "<html><body>Hello</body></html>"
+        return response
+
+    with patch('requests.get', side_effect=mock_requests_get):
+        findings = scanner.scan("http://test.com/search")
+
+    error_based_found = any("Error-based XPath injection detected" in f.description for f in findings)
+    blind_based_found = any("Blind XPath injection detected" in f.description for f in findings)
+
+    if error_based_found and blind_based_found:
+        print("✅ XPath Injection Scanner working")
+        return True
+    else:
+        print("❌ XPath Injection Scanner not working")
 
 def test_cmdi_scanner():
     """Test CMDi scanner initialization."""
@@ -195,6 +230,7 @@ def main():
         test_authorization,
         test_reporting,
         test_scanners,
+        test_xpath_scanner
         test_cmdi_scanner
     ]
     

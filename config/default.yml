@@ -63,9 +63,15 @@ scanners:
     test_numeric_ids: true
     test_uuid_ids: true
     test_encoded_ids: true
-
+  
   trace:
     enabled: true
+    
+  xpath:
+    enabled: true
+    payload_file: "payloads/xpath_payloads.txt"
+    test_types: ["error", "blind"]
+    confidence_threshold: 0.7
 
 # Reconnaissance configurations
 recon:
