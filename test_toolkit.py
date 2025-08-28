@@ -41,6 +41,7 @@ def test_imports():
         from scanners.xss.xss_scanner import XSSScanner
         from scanners.csrf.csrf_scanner import CSRFScanner
         from scanners.traversal.directory_traversal_scanner import DirectoryTraversalScanner
+        from scanners.rci.ruby_code_injection_scanner import RubyCodeInjectionScanner
         from scanners.php_code_injection.php_code_injection_scanner import PHPCodeInjectionScanner
         from scanners.ssji.ssji_scanner import SSJIScanner
         from scanners.put.put_scanner import PutScanner
@@ -200,6 +201,31 @@ def test_scanners():
         print(f"❌ Scanner error: {e}")
         return False
 
+def test_rci_scanner():
+    """Test RCI scanner initialization."""
+    print("Testing RCI scanner...")
+
+    try:
+        from core.config.config_manager import ConfigManager
+        from scanners.rci.ruby_code_injection_scanner import RubyCodeInjectionScanner
+
+        config_manager = ConfigManager("config/default.yml")
+
+        # Initialize scanner
+        rci_scanner = RubyCodeInjectionScanner(config_manager)
+
+        # Check if payloads are loaded
+        if (hasattr(rci_scanner, 'direct_payloads') and len(rci_scanner.direct_payloads) > 0 and
+            hasattr(rci_scanner, 'time_payloads') and len(rci_scanner.time_payloads) > 0):
+            print("✅ RCI Scanner initialized with payloads")
+            return True
+        else:
+            print("❌ RCI Scanner not properly initialized")
+            return False
+
+    except Exception as e:
+        print(f"❌ RCI Scanner error: {e}")
+
 def test_oob_interaction():
     """Test the OOBInteraction utility."""
     print("Testing OOB Interaction...")
@@ -356,6 +382,7 @@ def main():
         test_authorization,
         test_reporting,
         test_scanners,
+        test_rci_scanner
         test_oob_interaction
         test_ldap_scanner
         test_xpath_scanner
