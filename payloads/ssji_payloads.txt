@@ -1,0 +1,13 @@
+{{7*7}}
+<%= 7*7 %>
+${7*7}
+#{7*7}
+*{7*7}
+;eval('7*7')
+eval('7*7')
+1;
+var d=new Date();while(new Date()-d<5000);
+';var d=new Date();while(new Date()-d<5000);
+";var d=new Date();while(new Date()-d<5000);
+eval('var d=new Date();while(new Date()-d<5000);')
+setTimeout(function(){}, 5000)
