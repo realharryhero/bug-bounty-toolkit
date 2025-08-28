@@ -46,7 +46,8 @@ For more information, see the documentation in the docs/ directory.
     
     # Main action groups
     action_group = parser.add_mutually_exclusive_group(required=True)
-    action_group.add_argument("--scan", choices=["sqli", "xss", "csrf", "auth", "traversal", "ssrf", "xxe", "cmdi", "idor", "xpath", "trace", "all"
+    action_group.add_argument("--scan", choices=[
+        "sqli", "xss", "csrf", "auth", "traversal", "ssrf", "xxe", "cmdi", "idor", "xpath", "trace", "bac", "all"
     ], help="Run vulnerability scanners")
     action_group.add_argument("--recon", choices=[
         "subdomain", "portscan", "fingerprint", "urls", "all"

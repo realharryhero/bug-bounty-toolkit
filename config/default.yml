@@ -86,6 +86,10 @@ scanners:
     test_types: ["error", "blind"]
     confidence_threshold: 0.7
 
+  bac:
+    enabled: true
+    confidence_threshold: 0.6
+
 # Reconnaissance configurations
 recon:
   subdomain_enum:
