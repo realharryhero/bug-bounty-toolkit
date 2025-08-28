@@ -63,7 +63,10 @@ scanners:
     test_numeric_ids: true
     test_uuid_ids: true
     test_encoded_ids: true
-
+  
+  trace:
+    enabled: true
+    
   xpath:
     enabled: true
     payload_file: "payloads/xpath_payloads.txt"

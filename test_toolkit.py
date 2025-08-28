@@ -24,13 +24,13 @@ from scanners.xss.xss_scanner import XSSScanner
 from scanners.csrf.csrf_scanner import CSRFScanner
 from scanners.traversal.directory_traversal_scanner import DirectoryTraversalScanner
 from scanners.xpath.xpath_injection_scanner import XPathInjectionScanner
+from scanners.cmdi.command_injection_scanner import CommandInjectionScanner
 
 def test_imports():
     """Test that all core modules can be imported."""
     print("Testing imports...")
     
     try:
-        # These are already imported at the top level, but we can do a quick check here
         assert 'AuthorizationManager' in globals()
         assert 'ConfigManager' in globals()
         assert 'ReportGenerator' in globals()
@@ -39,6 +39,7 @@ def test_imports():
         assert 'CSRFScanner' in globals()
         assert 'DirectoryTraversalScanner' in globals()
         assert 'XPathInjectionScanner' in globals()
+        assert 'CommandInjectionScanner' in globals()
         print("✅ All imports successful")
         return True
     except (ImportError, AssertionError) as e:
@@ -145,10 +146,12 @@ def test_scanners():
         xss_scanner = XSSScanner(config_manager)
         csrf_scanner = CSRFScanner(config_manager)
         traversal_scanner = DirectoryTraversalScanner(config_manager)
+        cmdi_scanner = CommandInjectionScanner(config_manager)
         
         # Check if payloads are loaded
         if (hasattr(sqli_scanner, 'payloads') and len(sqli_scanner.payloads) > 0 and
-            hasattr(xss_scanner, 'payloads') and len(xss_scanner.payloads) > 0):
+            hasattr(xss_scanner, 'payloads') and len(xss_scanner.payloads) > 0 and
+            hasattr(cmdi_scanner, 'payloads') and len(cmdi_scanner.payloads) > 0):
             print("✅ Scanners initialized with payloads")
             return True
         else:
@@ -158,6 +161,7 @@ def test_scanners():
     except Exception as e:
         print(f"❌ Scanner error: {e}")
         return False
+
 
 def test_xpath_scanner():
     """Test the XPath injection scanner."""
@@ -191,6 +195,27 @@ def test_xpath_scanner():
         return True
     else:
         print("❌ XPath Injection Scanner not working")
+
+def test_cmdi_scanner():
+    """Test CMDi scanner initialization."""
+    print("Testing CMDi Scanner...")
+
+    try:
+        from core.config.config_manager import ConfigManager
+        from scanners.cmdi.command_injection_scanner import CommandInjectionScanner
+
+        config_manager = ConfigManager("config/default.yml")
+        cmdi_scanner = CommandInjectionScanner(config_manager)
+
+        if hasattr(cmdi_scanner, 'payloads') and len(cmdi_scanner.payloads) > 0:
+            print("✅ CMDi scanner initialized with payloads")
+            return True
+        else:
+            print("❌ CMDi scanner not properly initialized")
+            return False
+
+    except Exception as e:
+        print(f"❌ CMDi scanner error: {e}")
         return False
 
 def main():
@@ -206,6 +231,7 @@ def main():
         test_reporting,
         test_scanners,
         test_xpath_scanner
+        test_cmdi_scanner
     ]
     
     passed = 0
