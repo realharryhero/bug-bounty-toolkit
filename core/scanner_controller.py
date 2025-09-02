@@ -29,6 +29,8 @@ from scanners.xpath.xpath_injection_scanner import XPathInjectionScanner
 from scanners.trace.trace_scanner import TraceScanner
 from scanners.ssji.ssji_scanner import SSJIScanner
 from scanners.put.put_scanner import PutScanner
+from scanners.client_xpath.client_xpath_injection_scanner import ClientSideXPathInjectionScanner
+from scanners.client_json.client_json_injection_scanner import ClientSideJSONInjectionScanner
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
@@ -67,6 +69,8 @@ class ScannerController:
             'xpath': XPathInjectionScanner(config_manager),
             'trace': TraceScanner(config_manager),
             'put': PutScanner(config_manager),
+            'client_xpath': ClientSideXPathInjectionScanner(config_manager),
+            'client_json': ClientSideJSONInjectionScanner(config_manager),
         }
     
     def run_scan(self, scan_type: str) -> ScanResults:

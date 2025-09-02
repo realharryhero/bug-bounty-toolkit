@@ -27,6 +27,8 @@ from scanners.traversal.directory_traversal_scanner import DirectoryTraversalSca
 from scanners.xpath.xpath_injection_scanner import XPathInjectionScanner
 from scanners.cmdi.command_injection_scanner import CommandInjectionScanner
 from scanners.put.put_scanner import PutScanner
+from scanners.client_xpath.client_xpath_injection_scanner import ClientSideXPathInjectionScanner
+from scanners.client_json.client_json_injection_scanner import ClientSideJSONInjectionScanner
 
 def test_imports():
     """Test that all core modules can be imported."""
@@ -45,6 +47,8 @@ def test_imports():
         from scanners.php_code_injection.php_code_injection_scanner import PHPCodeInjectionScanner
         from scanners.ssji.ssji_scanner import SSJIScanner
         from scanners.put.put_scanner import PutScanner
+        from scanners.client_xpath.client_xpath_injection_scanner import ClientSideXPathInjectionScanner
+        from scanners.client_json.client_json_injection_scanner import ClientSideJSONInjectionScanner
         assert 'AuthorizationManager' in globals()
         assert 'ConfigManager' in globals()
         assert 'ReportGenerator' in globals()

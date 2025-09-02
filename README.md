@@ -26,6 +26,8 @@ By using this software, you acknowledge and agree that:
 - **XXE**: XML External Entity vulnerability testing
 - **Command Injection**: OS command injection detection
 - **IDOR**: Insecure Direct Object Reference testing
+- **Client-side XPath Injection**: DOM-based XPath injection detection (reflected, stored, and DOM-based)
+- **Client-side JSON Injection**: DOM-based JSON injection including JSONP and prototype pollution
 - **HTTP PUT Method Detection**: Checks if the PUT method is enabled on the server.
 
 ### 🕵️ Reconnaissance Automation
@@ -71,6 +73,10 @@ By using this software, you acknowledge and agree that:
 ```bash
 # Single vulnerability scan
 python main.py --scan sqli --target https://example.com
+
+# Client-side injection testing
+python main.py --scan client_xpath --target https://example.com
+python main.py --scan client_json --target https://example.com
 
 # Multiple vulnerability types
 python main.py --scan all --target https://example.com
@@ -184,6 +190,8 @@ bug-bounty-toolkit/
 | XXE | XML external entity vulnerabilities | 🚧 In Progress |
 | Command Injection | OS command injection detection | 🚧 In Progress |
 | IDOR | Insecure direct object references | 🚧 In Progress |
+| Client-side XPath Injection | DOM-based XPath injection (reflected, stored, DOM-based) | ✅ Implemented |
+| Client-side JSON Injection | DOM-based JSON injection including JSONP and prototype pollution | ✅ Implemented |
 | HTTP PUT Enabled | Detects if the HTTP PUT method is enabled (CWE-650) | ✅ Implemented |
 
 ## Reconnaissance Modules

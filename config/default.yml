@@ -103,6 +103,23 @@ scanners:
     enabled: true
     confidence_threshold: 0.6
 
+  client_xpath:
+    enabled: true
+    payload_file: "payloads/client_xpath_payloads.txt"
+    test_types: ["dom", "reflected", "stored"]
+    confidence_threshold: 0.6
+    check_fragments: true
+    check_parameters: true
+
+  client_json:
+    enabled: true
+    payload_file: "payloads/client_json_payloads.txt"
+    test_types: ["dom", "reflected", "stored", "jsonp"]
+    confidence_threshold: 0.6
+    check_fragments: true
+    check_parameters: true
+    test_prototype_pollution: true
+
 # Reconnaissance configurations
 recon:
   subdomain_enum:

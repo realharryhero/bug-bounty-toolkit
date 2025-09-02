@@ -9,11 +9,13 @@
 - **Multi-format Reporting**: HTML, JSON report generation with professional templates
 - **CLI Interface**: Full command-line interface with help system and parameter validation
 
-### Vulnerability Scanners (4/9 Complete)
+### Vulnerability Scanners (6/9 Complete)
 - ✅ **SQL Injection Scanner**: Error-based, blind, time-based, and union-based detection
 - ✅ **XSS Scanner**: Reflected, DOM-based, and stored XSS detection capabilities
 - ✅ **CSRF Scanner**: Token validation testing and form analysis
 - ✅ **Directory Traversal Scanner**: Path traversal with multiple encoding techniques
+- ✅ **Client-side XPath Injection Scanner**: DOM-based XPath injection detection (reflected, stored, DOM-based)
+- ✅ **Client-side JSON Injection Scanner**: DOM-based JSON injection including JSONP and prototype pollution
 - 🚧 **Authentication Bypass**: Placeholder for session management testing
 - 🚧 **SSRF Scanner**: Placeholder for server-side request forgery detection
 - 🚧 **XXE Scanner**: Placeholder for XML external entity testing
@@ -56,6 +58,8 @@ bug-bounty-toolkit/
 │   ├── xss/                  # XSS scanner ✅
 │   ├── csrf/                 # CSRF scanner ✅
 │   ├── traversal/            # Directory traversal scanner ✅
+│   ├── client_xpath/         # Client-side XPath injection scanner ✅
+│   ├── client_json/          # Client-side JSON injection scanner ✅
 │   ├── auth/                 # Authentication bypass (empty)
 │   ├── ssrf/                 # SSRF scanner (empty)
 │   ├── xxe/                  # XXE scanner (empty)
@@ -96,6 +100,10 @@ bug-bounty-toolkit/
 ```bash
 # Single scanner
 python main.py --scan sqli --target https://authorized-target.com
+
+# Client-side injection testing
+python main.py --scan client_xpath --target https://authorized-target.com
+python main.py --scan client_json --target https://authorized-target.com
 
 # All scanners
 python main.py --scan all --target https://authorized-target.com

