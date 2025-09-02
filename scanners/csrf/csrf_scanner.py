@@ -11,11 +11,12 @@ from typing import List, Dict, Any, Optional
 from core.config.config_manager import ConfigManager
 from core.reporting.report_generator import Finding, Severity
 from core.utils.logger import get_security_logger
+from scanners.base_scanner import BaseScanner
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
 
-class CSRFScanner:
+class CSRFScanner(BaseScanner):
     """Cross-Site Request Forgery vulnerability scanner."""
     
     def __init__(self, config_manager: ConfigManager):
@@ -25,6 +26,7 @@ class CSRFScanner:
         Args:
             config_manager: Configuration manager instance
         """
+        super().__init__(config_manager)
         self.config = config_manager.get_scanner_config('csrf')
         self.general_config = config_manager.get('general')
         
@@ -37,7 +39,7 @@ class CSRFScanner:
             r'__RequestVerificationToken',
         ]
     
-    def scan(self, target: str) -> List[Finding]:
+    def scan(self, target_url: str) -> List[Finding]:
         """
         Scan target for CSRF vulnerabilities.
         
@@ -47,12 +49,12 @@ class CSRFScanner:
         Returns:
             List of findings
         """
-        logger.info(f"Starting CSRF scan on {target}")
+        logger.info(f"Starting CSRF scan on {target_url}")
         findings = []
         
         try:
             # Get the target page
-            response = requests.get(target, timeout=self.general_config.get('timeout', 30))
+            response = requests.get(target_url, timeout=self.general_config.get('timeout', 30))
             
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, 'html.parser')
@@ -61,16 +63,21 @@ class CSRFScanner:
                 forms = soup.find_all('form')
                 
                 for form in forms:
-                    form_findings = self._analyze_form(form, target)
+                    form_findings = self._analyze_form(form, target_url)
                     findings.extend(form_findings)
             
             logger.info(f"CSRF scan completed - {len(findings)} potential vulnerabilities found")
             
         except Exception as e:
             logger.error(f"CSRF scan failed: {str(e)}")
-            security_logger.log_error("CSRF_SCAN_ERROR", str(e), target)
+            security_logger.log_error("CSRF_SCAN_ERROR", str(e), target_url)
         
-        return findings
+        verified_findings = self.filter_false_positives(findings, target_url)
+        
+        for finding in verified_findings:
+            self.log_finding_details(finding, "CSRF might be false if tokens or same-site cookies are enforced.")
+        
+        return verified_findings
     
     def _analyze_form(self, form, base_url: str) -> List[Finding]:
         """

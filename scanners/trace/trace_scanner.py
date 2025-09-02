@@ -9,11 +9,12 @@ from typing import List
 from core.config.config_manager import ConfigManager
 from core.reporting.report_generator import Finding, Severity
 from core.utils.logger import get_security_logger
+from scanners.base_scanner import BaseScanner
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
 
-class TraceScanner:
+class TraceScanner(BaseScanner):
     """ASP.NET Tracing vulnerability scanner."""
 
     def __init__(self, config_manager: ConfigManager):
@@ -23,6 +24,7 @@ class TraceScanner:
         Args:
             config_manager: Configuration manager instance
         """
+        super().__init__(config_manager)
         self.config = config_manager.get_scanner_config('trace')
         self.general_config = config_manager.get('general')
 
@@ -66,3 +68,13 @@ class TraceScanner:
 
         logger.info(f"ASP.NET Trace scan completed - {len(findings)} findings")
         return findings
+
+    def scan(self, target_url: str) -> List[Finding]:
+        findings = super().scan(target_url)
+        
+        verified_findings = self.filter_false_positives(findings, target_url)
+        
+        for finding in verified_findings:
+            self.log_finding_details(finding, "TRACE method might be false if disabled or not exposing sensitive headers.")
+        
+        return verified_findings

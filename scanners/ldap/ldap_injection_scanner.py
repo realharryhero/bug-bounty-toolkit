@@ -11,11 +11,12 @@ from typing import List, Dict, Any, Optional
 from core.config.config_manager import ConfigManager
 from core.reporting.report_generator import Finding, Severity
 from core.utils.logger import get_security_logger
+from scanners.base_scanner import BaseScanner
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
 
-class LDAPInjectionScanner:
+class LDAPInjectionScanner(BaseScanner):
     """LDAP Injection vulnerability scanner."""
 
     def __init__(self, config_manager: ConfigManager):
@@ -25,6 +26,7 @@ class LDAPInjectionScanner:
         Args:
             config_manager: Configuration manager instance
         """
+        super().__init__(config_manager)
         self.config = config_manager.get_scanner_config('ldap')
         self.general_config = config_manager.get('general')
 
@@ -65,7 +67,7 @@ class LDAPInjectionScanner:
 
         return payloads
 
-    def scan(self, target: str) -> List[Finding]:
+    def scan(self, target_url: str) -> List[Finding]:
         """
         Scan target for LDAP injection vulnerabilities by testing each parameter.
 
@@ -75,10 +77,10 @@ class LDAPInjectionScanner:
         Returns:
             List of findings
         """
-        logger.info(f"Starting LDAP injection scan on {target}")
+        logger.info(f"Starting LDAP injection scan on {target_url}")
         findings = []
 
-        parsed_url = urlparse(target)
+        parsed_url = urlparse(target_url)
         query_params = parse_qs(parsed_url.query)
 
         if not query_params:
@@ -91,17 +93,23 @@ class LDAPInjectionScanner:
                 test_types = self.config.get('test_types', ['error', 'blind'])
 
                 if 'error' in test_types:
-                    findings.extend(self._test_error_based(target, param))
+                    findings.extend(self._test_error_based(target_url, param))
 
                 if 'blind' in test_types:
-                    findings.extend(self._test_blind_injection(target, param))
+                    findings.extend(self._test_blind_injection(target_url, param))
 
             except Exception as e:
                 logger.error(f"LDAP injection scan failed for parameter {param}: {str(e)}")
-                security_logger.log_error("LDAP_SCAN_ERROR", str(e), target)
+                security_logger.log_error("LDAP_SCAN_ERROR", str(e), target_url)
 
         logger.info(f"LDAP injection scan completed - {len(findings)} potential vulnerabilities found")
-        return findings
+        
+        verified_findings = self.filter_false_positives(findings, target_url)
+        
+        for finding in verified_findings:
+            self.log_finding_details(finding, "LDAP injection might be false if input is sanitized or LDAP is configured securely.")
+        
+        return verified_findings
 
     def _test_error_based(self, target: str, param: str) -> List[Finding]:
         """Test for error-based LDAP injection on a specific parameter."""

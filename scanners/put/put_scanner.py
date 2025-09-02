@@ -8,11 +8,12 @@ from typing import List
 from core.config.config_manager import ConfigManager
 from core.reporting.report_generator import Finding, Severity
 from core.utils.logger import get_security_logger
+from scanners.base_scanner import BaseScanner
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
 
-class PutScanner:
+class PUTScanner(BaseScanner):
     """
     Scanner to detect if HTTP PUT method is enabled on the web server.
     This corresponds to CWE-650.
@@ -25,11 +26,12 @@ class PutScanner:
         Args:
             config_manager: The configuration manager instance.
         """
+        super().__init__(config_manager)
         self.config = config_manager.get_scanner_config('put')
         self.general_config = config_manager.get('general')
         self.timeout = self.general_config.get('timeout', 30)
 
-    def scan(self, target: str) -> List[Finding]:
+    def scan(self, target_url: str) -> List[Finding]:
         """
         Scans the given target to check if HTTP PUT is enabled.
 
@@ -39,7 +41,7 @@ class PutScanner:
         Returns:
             A list of findings. An empty list if no vulnerability is found.
         """
-        logger.info(f"Starting PUT scan on {target}")
+        logger.info(f"Starting PUT scan on {target_url}")
         findings = []
 
         # Generate a random filename and content
@@ -47,12 +49,12 @@ class PutScanner:
         test_content = f"This is a test file for PUT vulnerability detection. Random ID: {''.join(random.choices(string.ascii_lowercase + string.digits, k=16))}"
 
         # We should try to put the file in the root directory of the web server, and the current path
-        parsed_target = urlparse(target)
+        parsed_target = urlparse(target_url)
         base_url = f"{parsed_target.scheme}://{parsed_target.netloc}/"
 
         test_urls = [urljoin(base_url, random_filename)]
         if parsed_target.path and parsed_target.path != '/':
-            test_urls.append(urljoin(target, random_filename))
+            test_urls.append(urljoin(target_url, random_filename))
 
         for test_url in set(test_urls):
             try:
@@ -62,8 +64,14 @@ class PutScanner:
             except Exception as e:
                 logger.error(f"Error while scanning {test_url} for PUT vulnerability: {e}")
 
-        logger.info(f"PUT scan completed for {target}. Found {len(findings)} vulnerabilities.")
-        return findings
+        logger.info(f"PUT scan completed for {target_url}. Found {len(findings)} vulnerabilities.")
+        
+        verified_findings = self.filter_false_positives(findings, target_url)
+        
+        for finding in verified_findings:
+            self.log_finding_details(finding, "PUT method might be false if method overrides or permissions are restricted.")
+        
+        return verified_findings
 
     def _test_put_at_url(self, test_url: str, test_content: str) -> Finding | None:
         """

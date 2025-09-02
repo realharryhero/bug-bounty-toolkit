@@ -11,11 +11,12 @@ from typing import List, Dict, Any, Optional
 from core.config.config_manager import ConfigManager
 from core.reporting.report_generator import Finding, Severity
 from core.utils.logger import get_security_logger
+from scanners.base_scanner import BaseScanner
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
 
-class XPathInjectionScanner:
+class XPathInjectionScanner(BaseScanner):
     """XPath Injection vulnerability scanner with multiple detection techniques."""
 
     def __init__(self, config_manager: ConfigManager):
@@ -25,6 +26,7 @@ class XPathInjectionScanner:
         Args:
             config_manager: Configuration manager instance
         """
+        super().__init__(config_manager)
         self.config = config_manager.get_scanner_config('xpath')
         self.general_config = config_manager.get('general')
 
@@ -76,7 +78,7 @@ class XPathInjectionScanner:
 
         return payloads
 
-    def scan(self, target: str) -> List[Finding]:
+    def scan(self, target_url: str) -> List[Finding]:
         """
         Scan target for XPath injection vulnerabilities.
 
@@ -86,7 +88,7 @@ class XPathInjectionScanner:
         Returns:
             List of findings
         """
-        logger.info(f"Starting XPath injection scan on {target}")
+        logger.info(f"Starting XPath injection scan on {target_url}")
         findings = []
 
         try:
@@ -94,18 +96,23 @@ class XPathInjectionScanner:
             test_types = self.config.get('test_types', ['error', 'blind'])
 
             if 'error' in test_types:
-                findings.extend(self._test_error_based(target))
+                findings.extend(self._test_error_based(target_url))
 
             if 'blind' in test_types:
-                findings.extend(self._test_blind_injection(target))
+                findings.extend(self._test_blind_injection(target_url))
 
             logger.info(f"XPath injection scan completed - {len(findings)} potential vulnerabilities found")
 
         except Exception as e:
             logger.error(f"XPath injection scan failed: {str(e)}")
-            security_logger.log_error("XPATH_SCAN_ERROR", str(e), target)
+            security_logger.log_error("XPATH_SCAN_ERROR", str(e), target_url)
 
-        return findings
+        verified_findings = self.filter_false_positives(findings, target_url)
+        
+        for finding in verified_findings:
+            self.log_finding_details(finding, "XPath injection might be false if queries are parameterized or input is validated.")
+        
+        return verified_findings
 
     def _test_error_based(self, target: str) -> List[Finding]:
         """Test for error-based XPath injection."""

@@ -11,11 +11,12 @@ from typing import List, Dict, Any, Optional
 from core.config.config_manager import ConfigManager
 from core.reporting.report_generator import Finding, Severity
 from core.utils.logger import get_security_logger
+from scanners.base_scanner import BaseScanner
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
 
-class SSJIScanner:
+class SSJIScanner(BaseScanner):
     """Server-Side JavaScript Injection vulnerability scanner."""
 
     def __init__(self, config_manager: ConfigManager):
@@ -25,6 +26,7 @@ class SSJIScanner:
         Args:
             config_manager: Configuration manager instance
         """
+        super().__init__(config_manager)
         self.config = config_manager.get_scanner_config('ssji')
         self.general_config = config_manager.get('general')
 
@@ -92,7 +94,13 @@ class SSJIScanner:
             security_logger.log_error("SSJI_SCAN_FAILED", str(e), target_url)
 
         logger.info(f"SSJI scan completed. Found {len(findings)} potential issues.")
-        return findings
+        
+        verified_findings = self.filter_false_positives(findings, target_url)
+        
+        for finding in verified_findings:
+            self.log_finding_details(finding, "SSJI might be false if template rendering is secure or input is escaped.")
+        
+        return verified_findings
 
     def _find_injection_points(self, target_url: str) -> List[Dict[str, Any]]:
         """Find potential SSJI injection points."""

@@ -1,19 +1,21 @@
 import urllib.request
 import time
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
+from scanners.base_scanner import BaseScanner
 
-class PerlCodeInjectionScanner:
+class PerlInjectionScanner(BaseScanner):
     """
     Scans for Perl code injection vulnerabilities.
     """
 
-    def __init__(self):
+    def __init__(self, config_manager):
+        super().__init__(config_manager)
         self.name = "Perl code injection"
         self.severity = "High"
         self.id = 0x00100e00
         self.cwe = ["CWE-94", "CWE-95", "CWE-116"]
 
-    def scan(self, target_url):
+    def scan(self, target_url: str):
         """
         Scans the given target URL for Perl code injection vulnerabilities
         by injecting time-based payloads.
@@ -62,4 +64,11 @@ class PerlCodeInjectionScanner:
                     "payload": payload
                 })
 
-        return vulnerabilities
+        findings = vulnerabilities  # Your existing scan logic here
+
+        verified_findings = self.filter_false_positives(findings, target_url)
+
+        for finding in verified_findings:
+            self.log_finding_details(finding, "Code injection might be false if execution is restricted or sanitized.")
+
+        return verified_findings

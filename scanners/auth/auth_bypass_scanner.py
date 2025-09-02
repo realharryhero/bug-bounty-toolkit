@@ -10,11 +10,12 @@ from typing import List, Dict, Any, Optional
 from core.config.config_manager import ConfigManager
 from core.reporting.report_generator import Finding, Severity
 from core.utils.logger import get_security_logger
+from scanners.base_scanner import BaseScanner
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
 
-class AuthBypassScanner:
+class AuthBypassScanner(BaseScanner):
     """Authentication bypass vulnerability scanner."""
     
     def __init__(self, config_manager: ConfigManager):
@@ -24,8 +25,8 @@ class AuthBypassScanner:
         Args:
             config_manager: Configuration manager instance
         """
+        super().__init__(config_manager)
         self.config = config_manager.get_scanner_config('auth')
-        self.general_config = config_manager.get('general')
         
         # Common authentication bypass patterns
         self.bypass_patterns = [
@@ -94,12 +95,38 @@ class AuthBypassScanner:
                 # Test HTTP method manipulation
                 findings.extend(self._test_http_method_bypass(form_data))
                 
+                # Test session fixation bypass
+                findings.extend(self._test_session_fixation_bypass(form_data))
+                
+                # Test cookie manipulation bypass
+                findings.extend(self._test_cookie_manipulation_bypass(form_data))
+                
+                # Test JWT bypass
+                findings.extend(self._test_jwt_bypass(form_data))
+                
+                # Test session fixation
+                findings.extend(self._test_session_fixation_bypass(form_data))
+                
+                # Test cookie manipulation
+                findings.extend(self._test_cookie_manipulation_bypass(form_data))
+                
+                # Test JWT bypass
+                findings.extend(self._test_jwt_bypass(form_data))
+                
         except Exception as e:
             logger.error(f"Authentication bypass scan failed: {str(e)}")
             security_logger.log_error("AUTH_SCAN_FAILED", str(e), target_url)
         
         logger.info(f"Authentication bypass scan completed. Found {len(findings)} potential issues.")
-        return findings
+        
+        # Filter false positives
+        verified_findings = self.filter_false_positives(findings, target_url)
+        
+        # Log details for verification
+        for finding in verified_findings:
+            self.log_finding_details(finding, "Auth bypass might be false if redirects, sessions, or rate limiting are involved.")
+        
+        return verified_findings
     
     def _find_login_forms(self, target_url: str) -> List[Dict[str, Any]]:
         """Find login forms on the target."""
@@ -324,6 +351,142 @@ class AuthBypassScanner:
                     
             except Exception as e:
                 logger.debug(f"Error testing HTTP method bypass: {str(e)}")
+        
+        return findings
+    
+    def _test_session_fixation_bypass(self, form_data: Dict[str, Any]) -> List[Finding]:
+        """Test session fixation authentication bypass."""
+        findings = []
+        
+        try:
+            # Attempt to set a session cookie and reuse it
+            session = requests.Session()
+            session.get(form_data['url'], timeout=self.general_config.get('timeout', 10))
+            
+            # Extract session cookie if present
+            session_cookie = None
+            for cookie in session.cookies:
+                if 'session' in cookie.name.lower() or 'sid' in cookie.name.lower():
+                    session_cookie = cookie
+                    break
+            
+            if session_cookie:
+                # Try to use the session cookie in a login attempt
+                data = {}
+                for field in form_data['inputs']:
+                    if 'password' in field.lower():
+                        data[field] = 'test'
+                    elif any(x in field.lower() for x in ['user', 'login', 'email']):
+                        data[field] = 'admin'
+                    else:
+                        data[field] = 'test'
+                
+                response = session.request(
+                    form_data['method'], 
+                    form_data['url'], 
+                    data=data,
+                    timeout=self.general_config.get('timeout', 10),
+                    allow_redirects=False
+                )
+                
+                if self._is_auth_bypass_successful(response):
+                    finding = Finding(
+                        title="Session Fixation Authentication Bypass",
+                        severity=Severity.MEDIUM,
+                        confidence=0.7,
+                        description="Potential session fixation vulnerability allowing bypass",
+                        target=form_data['url'],
+                        vulnerability_type="Authentication Bypass",
+                        evidence=f"Session cookie: {session_cookie.name}={session_cookie.value}, Response status: {response.status_code}",
+                        impact="Attacker may fixate a session and bypass authentication.",
+                        remediation="Regenerate session IDs upon login and validate session integrity."
+                    )
+                    findings.append(finding)
+                    
+        except Exception as e:
+            logger.debug(f"Error testing session fixation bypass: {str(e)}")
+        
+        return findings
+    
+    def _test_cookie_manipulation_bypass(self, form_data: Dict[str, Any]) -> List[Finding]:
+        """Test cookie manipulation authentication bypass."""
+        findings = []
+        
+        try:
+            # Test with manipulated cookies
+            cookies = {
+                'admin': '1',
+                'role': 'admin',
+                'authenticated': 'true',
+                'user_level': '999'
+            }
+            
+            response = requests.request(
+                form_data['method'], 
+                form_data['url'], 
+                cookies=cookies,
+                timeout=self.general_config.get('timeout', 10),
+                allow_redirects=False
+            )
+            
+            if self._is_auth_bypass_successful(response):
+                finding = Finding(
+                    title="Cookie Manipulation Authentication Bypass",
+                    severity=Severity.MEDIUM,
+                    confidence=0.6,
+                    description="Authentication bypass via cookie manipulation",
+                    target=form_data['url'],
+                    vulnerability_type="Authentication Bypass",
+                    evidence=f"Manipulated cookies: {cookies}, Response status: {response.status_code}",
+                    impact="Attacker may bypass authentication by forging cookies.",
+                    remediation="Implement secure cookie handling and server-side validation."
+                )
+                findings.append(finding)
+                
+        except Exception as e:
+            logger.debug(f"Error testing cookie manipulation bypass: {str(e)}")
+        
+        return findings
+    
+    def _test_jwt_bypass(self, form_data: Dict[str, Any]) -> List[Finding]:
+        """Test JWT token manipulation bypass."""
+        findings = []
+        
+        try:
+            # Common JWT bypass payloads (simplified)
+            jwt_payloads = [
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",  # None algorithm
+                "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.",  # None algorithm
+            ]
+            
+            for payload in jwt_payloads:
+                headers = {'Authorization': f'Bearer {payload}'}
+                
+                response = requests.request(
+                    form_data['method'], 
+                    form_data['url'], 
+                    headers=headers,
+                    timeout=self.general_config.get('timeout', 10),
+                    allow_redirects=False
+                )
+                
+                if self._is_auth_bypass_successful(response):
+                    finding = Finding(
+                        title="JWT Authentication Bypass",
+                        severity=Severity.HIGH,
+                        confidence=0.8,
+                        description="Authentication bypass using JWT token manipulation",
+                        target=form_data['url'],
+                        vulnerability_type="Authentication Bypass",
+                        evidence=f"JWT payload: {payload[:50]}..., Response status: {response.status_code}",
+                        impact="Attacker may bypass authentication with forged JWT tokens.",
+                        remediation="Validate JWT signatures, algorithms, and claims properly."
+                    )
+                    findings.append(finding)
+                    break
+                    
+        except Exception as e:
+            logger.debug(f"Error testing JWT bypass: {str(e)}")
         
         return findings
     

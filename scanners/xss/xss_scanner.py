@@ -11,11 +11,12 @@ from typing import List, Dict, Any, Optional
 from core.config.config_manager import ConfigManager
 from core.reporting.report_generator import Finding, Severity
 from core.utils.logger import get_security_logger
+from scanners.base_scanner import BaseScanner
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
 
-class XSSScanner:
+class XSSScanner(BaseScanner):
     """Cross-Site Scripting vulnerability scanner."""
     
     def __init__(self, config_manager: ConfigManager):
@@ -25,6 +26,7 @@ class XSSScanner:
         Args:
             config_manager: Configuration manager instance
         """
+        super().__init__(config_manager)
         self.config = config_manager.get_scanner_config('xss')
         self.general_config = config_manager.get('general')
         
@@ -71,7 +73,7 @@ class XSSScanner:
         
         return payloads
     
-    def scan(self, target: str) -> List[Finding]:
+    def scan(self, target_url: str) -> List[Finding]:
         """
         Scan target for XSS vulnerabilities.
         
@@ -81,7 +83,7 @@ class XSSScanner:
         Returns:
             List of findings
         """
-        logger.info(f"Starting XSS scan on {target}")
+        logger.info(f"Starting XSS scan on {target_url}")
         findings = []
         
         try:
@@ -89,21 +91,26 @@ class XSSScanner:
             test_types = self.config.get('test_types', ['reflected', 'stored', 'dom'])
             
             if 'reflected' in test_types:
-                findings.extend(self._test_reflected_xss(target))
+                findings.extend(self._test_reflected_xss(target_url))
             
             if 'stored' in test_types:
-                findings.extend(self._test_stored_xss(target))
+                findings.extend(self._test_stored_xss(target_url))
             
             if 'dom' in test_types:
-                findings.extend(self._test_dom_xss(target))
+                findings.extend(self._test_dom_xss(target_url))
             
             logger.info(f"XSS scan completed - {len(findings)} potential vulnerabilities found")
             
         except Exception as e:
             logger.error(f"XSS scan failed: {str(e)}")
-            security_logger.log_error("XSS_SCAN_ERROR", str(e), target)
+            security_logger.log_error("XSS_SCAN_ERROR", str(e), target_url)
         
-        return findings
+        verified_findings = self.filter_false_positives(findings, target_url)
+        
+        for finding in verified_findings:
+            self.log_finding_details(finding, "XSS might be false if output encoding or CSP is implemented.")
+        
+        return verified_findings
     
     def _test_reflected_xss(self, target: str) -> List[Finding]:
         """Test for reflected XSS vulnerabilities."""

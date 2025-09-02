@@ -11,11 +11,12 @@ from typing import List, Dict, Any, Optional
 from core.config.config_manager import ConfigManager
 from core.reporting.report_generator import Finding, Severity
 from core.utils.logger import get_security_logger
+from scanners.base_scanner import BaseScanner
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
 
-class SQLInjectionScanner:
+class SQLInjectionScanner(BaseScanner):
     """SQL Injection vulnerability scanner with multiple detection techniques."""
     
     def __init__(self, config_manager: ConfigManager):
@@ -25,6 +26,7 @@ class SQLInjectionScanner:
         Args:
             config_manager: Configuration manager instance
         """
+        super().__init__(config_manager)
         self.config = config_manager.get_scanner_config('sqli')
         self.general_config = config_manager.get('general')
         
@@ -92,7 +94,7 @@ class SQLInjectionScanner:
         
         return payloads
     
-    def scan(self, target: str) -> List[Finding]:
+    def scan(self, target_url: str) -> List[Finding]:
         """
         Scan target for SQL injection vulnerabilities.
         
@@ -102,7 +104,7 @@ class SQLInjectionScanner:
         Returns:
             List of findings
         """
-        logger.info(f"Starting SQL injection scan on {target}")
+        logger.info(f"Starting SQL injection scan on {target_url}")
         findings = []
         
         try:
@@ -110,24 +112,29 @@ class SQLInjectionScanner:
             test_types = self.config.get('test_types', ['error', 'blind', 'time', 'union'])
             
             if 'error' in test_types:
-                findings.extend(self._test_error_based(target))
+                findings.extend(self._test_error_based(target_url))
             
             if 'blind' in test_types:
-                findings.extend(self._test_blind_injection(target))
+                findings.extend(self._test_blind_injection(target_url))
             
             if 'time' in test_types:
-                findings.extend(self._test_time_based(target))
+                findings.extend(self._test_time_based(target_url))
             
             if 'union' in test_types:
-                findings.extend(self._test_union_based(target))
+                findings.extend(self._test_union_based(target_url))
             
             logger.info(f"SQL injection scan completed - {len(findings)} potential vulnerabilities found")
             
         except Exception as e:
             logger.error(f"SQL injection scan failed: {str(e)}")
-            security_logger.log_error("SQLI_SCAN_ERROR", str(e), target)
+            security_logger.log_error("SQLI_SCAN_ERROR", str(e), target_url)
         
-        return findings
+        verified_findings = self.filter_false_positives(findings, target_url)
+        
+        for finding in verified_findings:
+            self.log_finding_details(finding, "SQL injection might be false if prepared statements or WAF are used.")
+        
+        return verified_findings
     
     def _test_error_based(self, target: str) -> List[Finding]:
         """Test for error-based SQL injection."""

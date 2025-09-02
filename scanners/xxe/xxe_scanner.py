@@ -10,11 +10,12 @@ from typing import List, Dict, Any, Optional
 from core.config.config_manager import ConfigManager
 from core.reporting.report_generator import Finding, Severity
 from core.utils.logger import get_security_logger
+from scanners.base_scanner import BaseScanner
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
 
-class XXEScanner:
+class XXEScanner(BaseScanner):
     """XML External Entity vulnerability scanner."""
     
     def __init__(self, config_manager: ConfigManager):
@@ -24,6 +25,7 @@ class XXEScanner:
         Args:
             config_manager: Configuration manager instance
         """
+        super().__init__(config_manager)
         self.config = config_manager.get_scanner_config('xxe')
         self.general_config = config_manager.get('general')
         
@@ -151,7 +153,13 @@ class XXEScanner:
             security_logger.log_error("XXE_SCAN_FAILED", str(e), target_url)
         
         logger.info(f"XXE scan completed. Found {len(findings)} potential issues.")
-        return findings
+        
+        verified_findings = self.filter_false_positives(findings, target_url)
+        
+        for finding in verified_findings:
+            self.log_finding_details(finding, "XXE might be false if external entities are disabled or input is validated.")
+        
+        return verified_findings
     
     def _find_xml_endpoints(self, target_url: str) -> List[Dict[str, Any]]:
         """Find endpoints that likely accept XML input."""

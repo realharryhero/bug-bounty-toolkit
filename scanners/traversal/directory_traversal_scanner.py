@@ -11,11 +11,12 @@ from bs4 import BeautifulSoup
 from core.config.config_manager import ConfigManager
 from core.reporting.report_generator import Finding, Severity
 from core.utils.logger import get_security_logger
+from scanners.base_scanner import BaseScanner
 
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
 
-class DirectoryTraversalScanner:
+class DirectoryTraversalScanner(BaseScanner):
     """Directory traversal vulnerability scanner."""
     
     def __init__(self, config_manager: ConfigManager):
@@ -25,6 +26,7 @@ class DirectoryTraversalScanner:
         Args:
             config_manager: Configuration manager instance
         """
+        super().__init__(config_manager)
         self.config = config_manager.get_scanner_config('traversal')
         self.general_config = config_manager.get('general')
         
@@ -81,7 +83,7 @@ class DirectoryTraversalScanner:
         
         return payloads
     
-    def scan(self, target: str) -> List[Finding]:
+    def scan(self, target_url: str) -> List[Finding]:
         """
         Scan target for directory traversal vulnerabilities.
         
@@ -91,20 +93,25 @@ class DirectoryTraversalScanner:
         Returns:
             List of findings
         """
-        logger.info(f"Starting directory traversal scan on {target}")
+        logger.info(f"Starting directory traversal scan on {target_url}")
         findings = []
         
         try:
-            findings.extend(self._test_path_traversal(target))
-            findings.extend(self._test_post_path_traversal(target))
+            findings.extend(self._test_path_traversal(target_url))
+            findings.extend(self._test_post_path_traversal(target_url))
 
             logger.info(f"Directory traversal scan completed - {len(findings)} potential vulnerabilities found")
             
         except Exception as e:
             logger.error(f"Directory traversal scan failed: {str(e)}")
-            security_logger.log_error("TRAVERSAL_SCAN_ERROR", str(e), target)
+            security_logger.log_error("TRAVERSAL_SCAN_ERROR", str(e), target_url)
         
-        return findings
+        verified_findings = self.filter_false_positives(findings, target_url)
+        
+        for finding in verified_findings:
+            self.log_finding_details(finding, "Directory traversal might be false if path sanitization or chroot is used.")
+        
+        return verified_findings
     
     def _test_path_traversal(self, target: str) -> List[Finding]:
         """Test for path traversal vulnerabilities."""
