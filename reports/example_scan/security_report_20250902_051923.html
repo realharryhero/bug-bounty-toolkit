@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Assessment Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+        .summary { background-color: #f4f4f4; padding: 15px; border-radius: 5px; margin-bottom: 30px; }
+        .finding { border: 1px solid #ddd; margin: 20px 0; padding: 15px; border-radius: 5px; }
+        .critical { border-left: 5px solid #dc3545; }
+        .high { border-left: 5px solid #fd7e14; }
+        .medium { border-left: 5px solid #ffc107; }
+        .low { border-left: 5px solid #28a745; }
+        .info { border-left: 5px solid #17a2b8; }
+        .severity { font-weight: bold; text-transform: uppercase; }
+        .payload { background-color: #f8f9fa; padding: 10px; border-radius: 3px; font-family: monospace; margin: 10px 0; }
+        .metadata { font-size: 0.9em; color: #666; }
+        .statistics { display: flex; justify-content: space-around; margin: 20px 0; }
+        .stat-box { text-align: center; padding: 15px; background-color: #e9ecef; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Security Assessment Report</h1>
+        <p><strong>Target:</strong> https://example.com</p>
+        <p><strong>Scan Type:</strong> all</p>
+        <p><strong>Date:</strong> 2025-09-02T05:18:46.020583 - 2025-09-02T05:19:23.886830</p>
+        <p><strong>Duration:</strong> 37.866247 seconds</p>
+    </div>
+    
+    <div class="summary">
+        <h2>Executive Summary</h2>
+        <div class="statistics">
+            <div class="stat-box">
+                <h3>0</h3>
+                <p>Total Findings</p>
+            </div>
+            <div class="stat-box">
+                <h3>0</h3>
+                <p>Critical</p>
+            </div>
+            <div class="stat-box">
+                <h3>0</h3>
+                <p>High</p>
+            </div>
+            <div class="stat-box">
+                <h3>0</h3>
+                <p>Medium</p>
+            </div>
+            <div class="stat-box">
+                <h3>0</h3>
+                <p>Low</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="findings">
+        <h2>Detailed Findings</h2>
+        
+    </div>
+    
+    <div class="metadata">
+        <h2>Scan Metadata</h2>
+        <pre>{
+  "scanner_config": {
+    "sqli": {
+      "enabled": true,
+      "payload_file": "payloads/sqli_payloads.txt",
+      "test_types": [
+        "error",
+        "blind",
+        "time",
+        "union"
+      ],
+      "time_delay": 5,
+      "confidence_threshold": 0.7
+    },
+    "xss": {
+      "enabled": true,
+      "payload_file": "payloads/xss_payloads.txt",
+      "test_types": [
+        "reflected",
+        "stored",
+        "dom"
+      ],
+      "confidence_threshold": 0.8
+    },
+    "csrf": {
+      "enabled": true,
+      "check_tokens": true,
+      "check_referrer": true,
+      "check_origin": true
+    },
+    "auth": {
+      "enabled": true,
+      "test_session_management": true,
+      "test_privilege_escalation": true,
+      "common_passwords": "payloads/common_passwords.txt"
+    },
+    "traversal": {
+      "enabled": true,
+      "payload_file": "payloads/traversal_payloads.txt",
+      "encodings": [
+        "url",
+        "double_url",
+        "unicode"
+      ]
+    },
+    "ssrf": {
+      "enabled": true,
+      "payload_file": "payloads/ssrf_payloads.txt",
+      "test_internal_ips": true,
+      "test_cloud_metadata": true,
+      "test_out_of_band": true,
+      "oob_domain": "your-oob-domain.com"
+    },
+    "xxe": {
+      "enabled": true,
+      "payload_file": "payloads/xxe_payloads.txt",
+      "test_out_of_band": true
+    },
+    "cmdi": {
+      "enabled": true,
+      "payload_file": "payloads/cmdi_payloads.txt",
+      "test_types": [
+        "direct",
+        "blind",
+        "time"
+      ]
+    },
+    "idor": {
+      "enabled": true,
+      "test_numeric_ids": true,
+      "test_uuid_ids": true,
+      "test_encoded_ids": true
+    },
+    "rci": {
+      "enabled": true,
+      "test_types": [
+        "direct",
+        "blind"
+      ]
+    },
+    "php_code_injection": {
+      "enabled": true,
+      "payload_file": "payloads/php_code_injection_payloads.txt",
+      "test_types": [
+        "direct",
+        "blind",
+        "time"
+      ]
+    },
+    "trace": {
+      "enabled": true
+    },
+    "xpath": {
+      "enabled": true,
+      "payload_file": "payloads/xpath_payloads.txt",
+      "test_types": [
+        "error",
+        "blind"
+      ],
+      "confidence_threshold": 0.7
+    },
+    "ssji": {
+      "enabled": true,
+      "payload_file": "payloads/ssji_payloads.txt",
+      "test_types": [
+        "direct",
+        "blind",
+        "error"
+      ],
+      "time_delay": 5,
+      "confidence_threshold": 0.7
+    },
+    "ldap": {
+      "enabled": true,
+      "payload_file": "payloads/ldap_payloads.txt",
+      "test_types": [
+        "error",
+        "blind"
+      ],
+      "confidence_threshold": 0.7
+    },
+    "bac": {
+      "enabled": true,
+      "confidence_threshold": 0.6
+    },
+    "client_xpath": {
+      "enabled": true,
+      "payload_file": "payloads/client_xpath_payloads.txt",
+      "test_types": [
+        "dom",
+        "reflected",
+        "stored"
+      ],
+      "confidence_threshold": 0.6,
+      "check_fragments": true,
+      "check_parameters": true
+    },
+    "client_json": {
+      "enabled": true,
+      "payload_file": "payloads/client_json_payloads.txt",
+      "test_types": [
+        "dom",
+        "reflected",
+        "stored",
+        "jsonp"
+      ],
+      "confidence_threshold": 0.6,
+      "check_fragments": true,
+      "check_parameters": true,
+      "test_prototype_pollution": true
+    }
+  },
+  "command_line_args": {
+    "scan": "all",
+    "recon": null,
+    "target": "https://example.com",
+    "domain": null,
+    "scope_file": null,
+    "config": "config/default.yml",
+    "output": "reports/example_scan",
+    "format": "html",
+    "threads": 10,
+    "delay": 1.0,
+    "timeout": 30,
+    "verbose": 1,
+    "quiet": false
+  }
+}</pre>
+    </div>
+</body>
+</html>

@@ -35,6 +35,7 @@ class Finding:
     impact: Optional[str] = None
     remediation: Optional[str] = None
     references: Optional[List[str]] = None
+    cwe_ids: Optional[List[str]] = None
     timestamp: Optional[str] = None
     
     def __post_init__(self):
@@ -42,6 +43,8 @@ class Finding:
             self.timestamp = datetime.now().isoformat()
         if self.references is None:
             self.references = []
+        if self.cwe_ids is None:
+            self.cwe_ids = []
 
 @dataclass
 class ScanResults:

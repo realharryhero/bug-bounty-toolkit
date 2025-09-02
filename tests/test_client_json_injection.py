@@ -64,7 +64,7 @@ class TestClientSideJSONInjectionScanner(unittest.TestCase):
         mock_response.status_code = 200
         mock_response.text = """
         <script>
-            var userInput = "','test':'injected";
+            var userInput = '","test":"injected';
             var jsonStr = '{"data":"' + userInput + '"}';
             var parsed = JSON.parse(jsonStr);
         </script>

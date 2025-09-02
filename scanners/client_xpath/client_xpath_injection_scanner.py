@@ -28,7 +28,7 @@ class ClientSideXPathInjectionScanner(BaseScanner):
             config_manager: Configuration manager instance
         """
         super().__init__(config_manager)
-        self.config = config_manager.get_scanner_config('client_xpath', {})
+        self.config = config_manager.get_scanner_config('client_xpath')
         self.general_config = config_manager.get('general', {})
 
         # Client-side XPath injection payloads

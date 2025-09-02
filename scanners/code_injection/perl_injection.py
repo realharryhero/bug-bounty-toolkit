@@ -2,6 +2,7 @@ import urllib.request
 import time
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 from scanners.base_scanner import BaseScanner
+from core.reporting.report_generator import Finding, Severity
 
 class PerlInjectionScanner(BaseScanner):
     """
@@ -58,11 +59,20 @@ class PerlInjectionScanner(BaseScanner):
 
             # If the request took longer than our sleep duration, we found a vulnerability
             if (end_time - start_time) >= sleep_duration:
-                vulnerabilities.append({
-                    "url": new_url,
-                    "param": param,
-                    "payload": payload
-                })
+                finding = Finding(
+                    title="Perl Code Injection",
+                    severity=Severity.HIGH,
+                    confidence=0.9,
+                    description=f"Perl code injection vulnerability detected in parameter '{param}'. The application executes user input as Perl code.",
+                    target=new_url,
+                    vulnerability_type="Code Injection",
+                    payload=payload,
+                    evidence=f"Time-based detection: Request took {end_time - start_time:.2f} seconds, indicating code execution.",
+                    impact="An attacker could execute arbitrary Perl code on the server, potentially leading to full system compromise.",
+                    remediation="Validate and sanitize all user input. Avoid using eval() or system() with user-controlled data. Use prepared statements or safe APIs.",
+                    cwe_ids=self.cwe
+                )
+                vulnerabilities.append(finding)
 
         findings = vulnerabilities  # Your existing scan logic here
 

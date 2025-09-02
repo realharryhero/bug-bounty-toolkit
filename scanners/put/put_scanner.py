@@ -13,7 +13,7 @@ from scanners.base_scanner import BaseScanner
 logger = logging.getLogger(__name__)
 security_logger = get_security_logger()
 
-class PUTScanner(BaseScanner):
+class PutScanner(BaseScanner):
     """
     Scanner to detect if HTTP PUT method is enabled on the web server.
     This corresponds to CWE-650.

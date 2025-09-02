@@ -29,7 +29,7 @@ class ClientSideJSONInjectionScanner(BaseScanner):
             config_manager: Configuration manager instance
         """
         super().__init__(config_manager)
-        self.config = config_manager.get_scanner_config('client_json', {})
+        self.config = config_manager.get_scanner_config('client_json')
         self.general_config = config_manager.get('general', {})
 
         # Client-side JSON injection payloads
@@ -433,8 +433,8 @@ class ClientSideJSONInjectionScanner(BaseScanner):
     def _check_json_structure_break(self, content: str, payload: str) -> bool:
         """Check if payload breaks JSON structure in the response."""
         try:
-            # Look for JSON-like structures in the response
-            json_pattern = r'\{[^{}]*' + re.escape(payload) + r'[^{}]*\}'
+            # Look for JSON-like structures in the response that contain the payload
+            json_pattern = r'\{[^{}]*' + re.escape(payload) + r'[^{}]*\}?'
             json_matches = re.findall(json_pattern, content, re.DOTALL)
             
             for match in json_matches:
