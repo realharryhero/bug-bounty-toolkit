@@ -3,8 +3,8 @@ services:
     build: .
     container_name: virtual-browser
     ports:
-      - "6080:6080"  # noVNC web interface
-      - "5901:5901"  # VNC port (optional)
+      - "127.0.0.1:6080:6080"  # noVNC web interface (localhost only)
+      - "127.0.0.1:5901:5901"  # VNC port (localhost only)
     environment:
       - DISPLAY=:1
       - RESOLUTION=1920x1080

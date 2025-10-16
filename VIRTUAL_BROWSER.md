@@ -117,9 +117,11 @@ To change the default ports, edit `docker-compose.yml`:
 
 ```yaml
 ports:
-  - "6080:6080"  # Change the first port number (host:container)
-  - "5901:5901"
+  - "127.0.0.1:8080:6080"  # Change 8080 to desired port (keeps localhost binding)
+  - "127.0.0.1:5901:5901"
 ```
+
+**Note**: By default, ports are bound to localhost (127.0.0.1) for security. To enable external access, remove the `127.0.0.1:` prefix, but only do this on trusted networks.
 
 ## Architecture
 
@@ -263,11 +265,12 @@ To run multiple instances, create a copy of `docker-compose.yml` with different:
 ⚠️ **Important Security Notes**:
 
 1. **Default Password**: The default VNC password is `vncpassword`. Change it for production use.
-2. **Network Exposure**: By default, the service binds to all interfaces (0.0.0.0). For local use only, bind to 127.0.0.1:
+2. **Network Binding**: By default, the service binds to localhost (127.0.0.1) for security. Ports are only accessible from your local machine. To enable external access:
    ```yaml
    ports:
-     - "127.0.0.1:6080:6080"
+     - "6080:6080"  # Remove 127.0.0.1: prefix
    ```
+   **Only do this on trusted networks and consider adding authentication.**
 3. **Untrusted Content**: Only browse trusted websites within the virtual environment
 4. **Updates**: Regularly rebuild the image to get security updates:
    ```bash

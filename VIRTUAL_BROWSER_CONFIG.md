@@ -21,17 +21,20 @@ environment:
 Edit `docker-compose.yml`:
 ```yaml
 ports:
-  - "8080:6080"  # Access via http://localhost:8080
+  - "127.0.0.1:8080:6080"  # Change 8080 to desired port
+  - "127.0.0.1:5901:5901"
+```
+
+### Enable External Access
+By default, the virtual browser binds to localhost only for security.
+To enable access from other machines on your network, edit `docker-compose.yml`:
+```yaml
+ports:
+  - "6080:6080"  # Remove 127.0.0.1: prefix to bind to all interfaces
   - "5901:5901"
 ```
 
-### Bind to Specific Interface
-For security, bind only to localhost:
-```yaml
-ports:
-  - "127.0.0.1:6080:6080"
-  - "127.0.0.1:5901:5901"
-```
+**⚠️ Security Warning**: Only enable external access on trusted networks. Consider using a reverse proxy with authentication for production use.
 
 ## Multiple Instances
 

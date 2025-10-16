@@ -268,7 +268,7 @@ All configuration files have been validated:
 ## Security Considerations
 
 1. **Default Password**: VNC password is `vncpassword` (should be changed for production)
-2. **Network Binding**: By default binds to all interfaces (can be restricted to localhost)
+2. **Network Binding**: By default binds to localhost (127.0.0.1) for security - only accessible from local machine
 3. **Isolation**: Container provides isolation but should not be considered a security boundary
 4. **Updates**: Regular rebuilds recommended for security updates
 
