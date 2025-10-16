@@ -1,0 +1,60 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+venv
+.venv
+env
+.env
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs and reports
+logs/
+*.log
+reports/*.html
+reports/*.json
+reports/*.pdf
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Documentation (not needed in container)
+docs/
+examples/
+*.md
+!README.md
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+tests/
+
+# Security
+*.pem
+*.key
+secrets.yml
+.secrets

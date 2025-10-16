@@ -2,6 +2,18 @@
 
 A comprehensive, professional-grade bug bounty automation toolkit for ethical security research. This toolkit provides automated vulnerability detection capabilities while maintaining strict ethical safeguards and legal compliance.
 
+## 🆕 Virtual Browser Environment
+
+**NEW**: This toolkit now includes a virtualized browser environment! Access a full desktop environment with web browsers through your browser using a single command.
+
+👉 **[Virtual Browser Documentation](VIRTUAL_BROWSER.md)**
+
+**Quick Start:**
+```bash
+./start-virtual-browser.sh
+# Then open http://localhost:6080 in your browser
+```
+
 ## ⚠️ LEGAL DISCLAIMER
 
 **THIS TOOLKIT IS FOR AUTHORIZED TESTING ONLY**
@@ -15,6 +27,13 @@ By using this software, you acknowledge and agree that:
 **ALWAYS OBTAIN EXPLICIT WRITTEN AUTHORIZATION BEFORE TESTING ANY SYSTEM**
 
 ## Features
+
+### 🖥️ Virtual Browser Environment
+- **Isolated Browser Access**: Run browsers in a secure, containerized environment
+- **Web-based Access**: Access via browser (noVNC) - no VNC client needed
+- **Single Command Setup**: One command to start the entire environment
+- **Pre-installed Browsers**: Firefox and Chromium included
+- **Perfect for Testing**: Safe environment for testing suspicious sites
 
 ### 🔍 Automated Vulnerability Scanners
 - **SQL Injection**: Error-based, blind, time-based, and union-based detection

@@ -1,0 +1,20 @@
+services:
+  virtual-browser:
+    build: .
+    container_name: virtual-browser
+    ports:
+      - "127.0.0.1:6080:6080"  # noVNC web interface (localhost only)
+      - "127.0.0.1:5901:5901"  # VNC port (localhost only)
+    environment:
+      - DISPLAY=:1
+      - RESOLUTION=1920x1080
+    volumes:
+      - browser-data:/root
+    restart: unless-stopped
+    shm_size: '2gb'  # Increased shared memory for browser stability
+    stdin_open: true
+    tty: true
+
+volumes:
+  browser-data:
+    driver: local

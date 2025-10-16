@@ -6,6 +6,13 @@
 - pip (Python package manager)
 - Git
 
+### Virtual Browser (Optional)
+For the virtual browser environment, you also need:
+- Docker 20.10 or higher
+- Docker Compose 2.0 or higher
+- At least 4GB of available RAM
+- 10GB of available disk space
+
 ## Installation Steps
 
 ### 1. Clone the Repository
@@ -41,6 +48,45 @@ python main.py --help
 ```
 
 You should see the help message with available options.
+
+### 5. Install Virtual Browser (Optional)
+
+If you want to use the virtual browser environment:
+
+#### On Ubuntu/Debian:
+```bash
+# Install Docker
+sudo apt-get update
+sudo apt-get install docker.io docker-compose-plugin
+sudo usermod -aG docker $USER
+# Log out and back in for group changes to take effect
+```
+
+#### On macOS:
+```bash
+# Install Docker Desktop
+brew install --cask docker
+# Or download from https://www.docker.com/products/docker-desktop
+```
+
+#### On Windows:
+- Download and install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop)
+- Enable WSL 2 if prompted
+
+#### Start Virtual Browser:
+```bash
+./start-virtual-browser.sh
+
+# Or on Windows:
+start-virtual-browser.bat
+
+# Or using make:
+make start
+```
+
+Access the virtual browser at: http://localhost:6080
+
+For detailed virtual browser documentation, see [VIRTUAL_BROWSER.md](../VIRTUAL_BROWSER.md)
 
 ## Optional Dependencies
 
